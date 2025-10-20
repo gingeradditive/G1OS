@@ -2,82 +2,7 @@
 # Changelog
 All notable changes to MainsailOS will be documented in this file.
 
-## [2.2.2](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.2.2) - 2025-10-03
-### Bug Fixes and Improvements
-
-- **RpiOS**: Fix download urls to raspios oldstable (bookworm) ([#350](https://github.com/mainsail-crew/MainsailOS/pull/350))
-
-### Other
-
-- Bump version to v2.2.2
-
-## [2.2.1](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.2.1) - 2025-10-03
-### Bug Fixes and Improvements
-
-- **Canbus**: Remove `RestartSec=0.1s` from the 25-can.network config. ([#349](https://github.com/mainsail-crew/MainsailOS/pull/349))
-
-### Other
-
-- Bump version to v2.2.1
-
-## [2.2.0](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.2.0) - 2025-09-07
-### Features
-
-- Add support for orangepi zero3 ([#336](https://github.com/mainsail-crew/MainsailOS/pull/336))
-
-### Bug Fixes and Improvements
-
-- **headless_nm**: Fix reading SSID or PW with special chars ([#347](https://github.com/mainsail-crew/MainsailOS/pull/347))
-
-### Other
-
-- Bump version to v2.2.0
-
-## [2.1.0](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.1.0) - 2025-08-15
-### Features
-
-- **ci**: Add KlipperScreen module ([#284](https://github.com/mainsail-crew/MainsailOS/pull/284))
-- Add module for KIAUH ([#318](https://github.com/mainsail-crew/MainsailOS/pull/318))
-- Add CANBUS support ([#339](https://github.com/mainsail-crew/MainsailOS/pull/339))
-- Add btt cb1 build_only image ([#328](https://github.com/mainsail-crew/MainsailOS/pull/328))
-
-### Bug Fixes and Improvements
-
-- **build**: Fix location of boot partition ([#289](https://github.com/mainsail-crew/MainsailOS/pull/289))
-- **build**: Fix log file upload ([#297](https://github.com/mainsail-crew/MainsailOS/pull/297))
-- **ci**: Fix annotations from actions ([#285](https://github.com/mainsail-crew/MainsailOS/pull/285))
-- **moonraker**: PKGLIST variable rename ([#298](https://github.com/mainsail-crew/MainsailOS/pull/298))
-- Add supported sbc to non rpi images ([#277](https://github.com/mainsail-crew/MainsailOS/pull/277))
-- Fix current version number ([#317](https://github.com/mainsail-crew/MainsailOS/pull/317))
-- Improve special modules check in build & release workflow ([#329](https://github.com/mainsail-crew/MainsailOS/pull/329))
-- Enable WiFi per default on RPI SBCs ([#334](https://github.com/mainsail-crew/MainsailOS/pull/334))
-- Fix parsing array to copy special modules ([#338](https://github.com/mainsail-crew/MainsailOS/pull/338))
-- Fix upgrade rpi images ([#342](https://github.com/mainsail-crew/MainsailOS/pull/342))
-
-### Refactor
-
-- Change version handling ([#296](https://github.com/mainsail-crew/MainsailOS/pull/296))
-- Transition from CustomPiOs to CustoPiZer ([#314](https://github.com/mainsail-crew/MainsailOS/pull/314))
-- Use systemctl_if_exists in 10-config-raspberry ([#332](https://github.com/mainsail-crew/MainsailOS/pull/332))
-
-### Documentation
-
-- Readme CanBoot -> katapult ([#320](https://github.com/mainsail-crew/MainsailOS/pull/320))
-- Readme fix newline ([#321](https://github.com/mainsail-crew/MainsailOS/pull/321))
-- Update README.md ([#327](https://github.com/mainsail-crew/MainsailOS/pull/327))
-
-### Other
-
-- **ci**: Skip build on push to master branch ([#280](https://github.com/mainsail-crew/MainsailOS/pull/280))
-- Update urls and base image version ([#288](https://github.com/mainsail-crew/MainsailOS/pull/288))
-- Add piwheels config, if it doesnt exists ([#290](https://github.com/mainsail-crew/MainsailOS/pull/290))
-- Change module order ([#291](https://github.com/mainsail-crew/MainsailOS/pull/291))
-- Switch to armbian for Opi Zero2 ([#292](https://github.com/mainsail-crew/MainsailOS/pull/292))
-- Bump version to v2.0.0
-- Add attribute to config.yml to add "build_only" images ([#325](https://github.com/mainsail-crew/MainsailOS/pull/325))
-- Bump version to v2.1.0
-
-## [2.0.3](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.0.3) - 2025-08-04
+## [2.0.5](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.0.5) - 2025-10-20
 ### Features
 
 - **build**: Removed raspicam and serialcomm module ([#83](https://github.com/mainsail-crew/MainsailOS/pull/83))
@@ -104,9 +29,15 @@ All notable changes to MainsailOS will be documented in this file.
 - Adds kiauh module for homebrewed images ([#184](https://github.com/mainsail-crew/MainsailOS/pull/184))
 - Add python3-opencv for obico ([#248](https://github.com/mainsail-crew/MainsailOS/pull/248))
 - Add module for KIAUH ([#318](https://github.com/mainsail-crew/MainsailOS/pull/318))
+- Add CANBUS support ([#339](https://github.com/mainsail-crew/MainsailOS/pull/339))
+- Add btt cb1 build_only image ([#328](https://github.com/mainsail-crew/MainsailOS/pull/328))
+- Add support for orangepi zero3 ([#336](https://github.com/mainsail-crew/MainsailOS/pull/336))
+- Reimplement g1os customization
 
 ### Bug Fixes and Improvements
 
+- **Canbus**: Remove `RestartSec=0.1s` from the 25-can.network config. ([#349](https://github.com/mainsail-crew/MainsailOS/pull/349))
+- **RpiOS**: Fix download urls to raspios oldstable (bookworm) ([#350](https://github.com/mainsail-crew/MainsailOS/pull/350))
 - **build**: Updated download paths ([#65](https://github.com/mainsail-crew/MainsailOS/pull/65))
 - **build**: Fixes error in Makefile ([#76](https://github.com/mainsail-crew/MainsailOS/pull/76))
 - **build**: Updated torrent download url ([#90](https://github.com/mainsail-crew/MainsailOS/pull/90))
@@ -116,6 +47,7 @@ All notable changes to MainsailOS will be documented in this file.
 - **ci**: Fix annotations from actions ([#285](https://github.com/mainsail-crew/MainsailOS/pull/285))
 - **config.txt**: Fix configuration errors with attached screens ([#119](https://github.com/mainsail-crew/MainsailOS/pull/119))
 - **crowsnest**: Fix install of crowsnest ([#111](https://github.com/mainsail-crew/MainsailOS/pull/111))
+- **headless_nm**: Fix reading SSID or PW with special chars ([#347](https://github.com/mainsail-crew/MainsailOS/pull/347))
 - **lint**: Should fix shellcheck warnings ([#160](https://github.com/mainsail-crew/MainsailOS/pull/160))
 - **mainsail**: Changed download url to mainsail-crew url ([#92](https://github.com/mainsail-crew/MainsailOS/pull/92))
 - **moonraker**: PKGLIST variable rename ([#298](https://github.com/mainsail-crew/MainsailOS/pull/298))
@@ -161,6 +93,9 @@ All notable changes to MainsailOS will be documented in this file.
 - Improve special modules check in build & release workflow ([#329](https://github.com/mainsail-crew/MainsailOS/pull/329))
 - Enable WiFi per default on RPI SBCs ([#334](https://github.com/mainsail-crew/MainsailOS/pull/334))
 - Fix parsing array to copy special modules ([#338](https://github.com/mainsail-crew/MainsailOS/pull/338))
+- Fix upgrade rpi images ([#342](https://github.com/mainsail-crew/MainsailOS/pull/342))
+- Hold linux kernel updates
+- Remove klipper
 
 ### Refactor
 
@@ -252,7 +187,12 @@ All notable changes to MainsailOS will be documented in this file.
 - Switch to armbian for Opi Zero2 ([#292](https://github.com/mainsail-crew/MainsailOS/pull/292))
 - Bump version to v2.0.0
 - Add attribute to config.yml to add "build_only" images ([#325](https://github.com/mainsail-crew/MainsailOS/pull/325))
+- Bump version to v2.1.0
+- Bump version to v2.2.0
+- Bump version to v2.2.1
+- Bump version to v2.2.2
 - Bump version to v2.0.3
+- Disable orange pi and renable update fixed package
+- Bump version to v2.0.5
 
-## [0.0.7](https://github.com/mainsail-crew/MainsailOS/releases/tag/0.0.7) - 2020-09-24
 
