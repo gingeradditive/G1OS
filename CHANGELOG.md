@@ -2,7 +2,7 @@
 # Changelog
 All notable changes to MainsailOS will be documented in this file.
 
-## [2.0.5](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.0.5) - 2025-10-20
+## [2.0.6](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.0.6) - 2026-02-16
 ### Features
 
 - **build**: Removed raspicam and serialcomm module ([#83](https://github.com/mainsail-crew/MainsailOS/pull/83))
@@ -94,6 +94,8 @@ All notable changes to MainsailOS will be documented in this file.
 - Enable WiFi per default on RPI SBCs ([#334](https://github.com/mainsail-crew/MainsailOS/pull/334))
 - Fix parsing array to copy special modules ([#338](https://github.com/mainsail-crew/MainsailOS/pull/338))
 - Fix upgrade rpi images ([#342](https://github.com/mainsail-crew/MainsailOS/pull/342))
+- Fix armbian-motd ([#352](https://github.com/mainsail-crew/MainsailOS/pull/352))
+- Armbian-motd ([#353](https://github.com/mainsail-crew/MainsailOS/pull/353))
 - Hold linux kernel updates
 - Remove klipper
 
@@ -194,5 +196,7 @@ All notable changes to MainsailOS will be documented in this file.
 - Bump version to v2.0.3
 - Disable orange pi and renable update fixed package
 - Bump version to v2.0.5
+- Disable raspberry pi armhf build
+- Bump version to v2.0.6
 
 
