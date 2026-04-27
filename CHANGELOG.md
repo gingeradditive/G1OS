@@ -2,6 +2,11 @@
 # Changelog
 All notable changes to MainsailOS will be documented in this file.
 
+## [2.0.9](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.0.9) - 2026-04-27
+### Other
+
+- Bump version to v2.0.9
+
 ## [2.0.8](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.0.8) - 2026-04-15
 ### Other
 
