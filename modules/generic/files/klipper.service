@@ -14,6 +14,7 @@ User=pi
 RemainAfterExit=yes
 WorkingDirectory=/home/pi/klipper
 EnvironmentFile=/home/pi/printer_data/systemd/klipper.env
+ExecStartPre=/bin/sh -c 'find /home/pi/klipper/klippy/chelper -maxdepth 1 -name c_helper.so -size 0 -delete'
 ExecStart=/home/pi/klippy-env/bin/python $KLIPPER_ARGS
 Restart=always
 RestartSec=10

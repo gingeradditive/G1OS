@@ -84,6 +84,17 @@ echo "Installing NumPy in Virtualenv"
 sudo -u "${BASE_USER}" "${ENV_DIR}"/bin/pip install "numpy<1.26"
 
 ########################################
+# Remove any pre-built chelper binary  #
+########################################
+
+# c_helper.so must never ship inside the image: Klipper only rebuilds it
+# when its mtime is older than the .c sources, so a truncated/corrupt
+# artifact baked in here (e.g. from a QA boot during image creation) would
+# be trusted forever and Klipper would crash with "can't connect to
+# klipper" on every unit flashed from this image.
+rm -f "${SRC_DIR}"/klippy/chelper/c_helper.so
+
+########################################
 # Return to saved directory            #
 ########################################
 
