@@ -2,6 +2,15 @@
 # Changelog
 All notable changes to MainsailOS will be documented in this file.
 
+## [2.1.0](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.1.0) - 2026-09-09
+### Bug Fixes and Improvements
+
+- Remove pre-built chelper binary to prevent crashes
+
+### Other
+
+- Bump version to v2.1.0
+
 ## [2.0.10](https://github.com/mainsail-crew/MainsailOS/releases/tag/2.0.10) - 2026-05-20
 ### Other
 
