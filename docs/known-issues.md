@@ -19,7 +19,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B07](#b07) | Bassa | Hardware | Pulsante di spegnimento su GPIO3 in conflitto con I2C abilitato — **non si corregge** |
 | [B08](#b08) | ~~Media~~ ✅ | USB | Montaggio chiavette: solo partizioni `sdX[0-9]`, un solo device alla volta — **risolto** |
 | [B09](#b09) | ~~Media~~ ✅ | Pacchetti | `initramfs-tools` resta in hold per sempre sull'immagine finale — **risolto (hold rimosso)** |
-| [B10](#b10) | Bassa | udev | Virgola mancante nelle regole udev Wi-Fi powersave e CAN |
+| [B10](#b10) | ~~Bassa~~ ✅ | udev | Virgola mancante nelle regole udev Wi-Fi powersave e CAN — **risolto** |
 | [B11](#b11) | ~~Bassa~~ ✅ | Swap | Il resize dello swap non viene mai eseguito — **risolto da upstream** |
 | [B12](#b12) | Bassa | Klipper | Pulizia `c_helper.so` corrotto solo se di dimensione 0 al runtime |
 | [B13](#b13) | Bassa | Wi-Fi | `headless_nm`: password < 8 caratteri lascia una connessione rotta |
@@ -147,7 +147,9 @@ Altri dettagli: l'immagine `splash.png` non è fornita da questo repo (deve arri
 - Fix: decidere se l'hold è voluto solo durante la build (allora riattivare l'unhold con `HOLD_PKGS`) o anche dopo (documentarlo).
 
 ### B10
-**Virgole mancanti nelle regole udev** — Bassa
+**Virgole mancanti nelle regole udev** — ✅ Risolto (2026-10-05)
+
+> Fix: aggiunte le virgole in `070-wifi-powersave.rules` e `canbus/10-can.rules`. Verifica: `udevadm verify /etc/udev/rules.d/*.rules`. Descrizione originale:
 
 - `modules/generic/files/070-wifi-powersave.rules:3` `KERNEL=="wlan*" \` → manca `,` prima di `RUN+=`.
 - `modules/generic/files/canbus/10-can.rules:1` `KERNEL=="can*"  ATTR{…}` → manca `,`.
