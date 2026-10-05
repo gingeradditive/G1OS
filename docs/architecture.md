@@ -79,12 +79,11 @@ Tutti i moduli usano `set -xe`: **un comando che fallisce interrompe la build** 
 | 17 | `61-EnableUSB` | generic |
 | 18 | `61-postrename` | raspberry (esce subito se `INIT_FORMAT` è `cloudinit*`) |
 | 19 | `61-postrename-cloudinit` | generic (attivo con `INIT_FORMAT=cloudinit-rpi`) |
-| 20 | `62-PowerButton` | generic |
-| 21 | `63-SplashScreen` | raspberry |
-| 22 | `69-G1Config` | generic |
-| 23 | `98-remove-passwordless-sudo` | raspberry |
+| 20 | `63-SplashScreen` | raspberry |
+| 21 | `69-G1Config` | generic |
+| 22 | `98-remove-passwordless-sudo` | raspberry |
 
-Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, quindi `60-Kamp` < `60-mainsailos`. Le dipendenze implicite contano: ad es. `54-timelapse`, `56-…`, `60-Kamp` appendono a `moonraker.conf` **solo se esiste già** (creato da `51-moonraker`); `62-PowerButton` e gli installer esterni usano `sudo` e funzionano solo perché il passwordless sudo viene rimosso dopo (`98-…`).
+Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, quindi `60-Kamp` < `60-mainsailos`. Le dipendenze implicite contano: ad es. `54-timelapse`, `56-…`, `60-Kamp` appendono a `moonraker.conf` **solo se esiste già** (creato da `51-moonraker`); gli installer esterni usano `sudo` e funzionano solo perché il passwordless sudo viene rimosso dopo (`98-…`).
 
 ## 3. Il sistema sul dispositivo
 
@@ -104,7 +103,7 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
   mainsail-config/          # mainsail.cfg (macro)
   crowsnest/  sonar/  moonraker-timelapse/
   KlipperScreen/  .KlipperScreen-env/   # clone di gingeradditive/klipperscreen4pellet
-  kiauh/  pi-power-button/
+  kiauh/
   Klipper-Adaptive-Meshing-Purging/
   G1-Configs/               # gingeradditive/G1-Configs (config stampante + app Flask, installer proprio)
   printer_data/
@@ -131,7 +130,6 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 | `g1-flask.service` | `G1-Configs/install.sh` | server Flask di G1-Configs, gira come root |
 | `splashscreen.service` | generato inline in `63-SplashScreen` | `fbi` su tty1 |
 | `usbstick-handler@.service` | generato inline in `61-EnableUSB` | attivato da regola udev |
-| `listen-for-shutdown` | installer pi-power-button (init.d) | pulsante su GPIO3 |
 | `systemd-networkd` | abilitato da `32-canbus` | interfacce `can*` a 1 Mbit |
 
 ### Rete / porte
@@ -150,7 +148,8 @@ Da `modules/raspberry/files/boot-config.txt`, appeso a `/boot/firmware/config.tx
 
 - `enable_uart=1` + `dtoverlay=disable-bt` → UART PL011 su GPIO14/15 per la MCU della stampante, Bluetooth disabilitato.
 - `console=serial0,115200` rimosso da `cmdline.txt`.
-- `dtparam=spi=on` (accelerometro / input shaper), `dtparam=i2c_arm=on`, modulo `i2c-dev`.
+- `dtparam=spi=on` (accelerometro / input shaper), modulo `i2c-dev` (`i2c_arm` disattivato: GPIO3 serve al pulsante).
+- `dtoverlay=gpio-shutdown` su GPIO3 (pin 5): pulsante di spegnimento/riaccensione gestito da kernel + `systemd-logind`, vedi [B07](known-issues.md#b07).
 - `gpu_mem` per modello (sul Pi 4, target unico, `gpu_mem=256`).
 - Swap: su Trixie `rpi-swap` (drop-in `/etc/rpi/swap.conf.d/10-mainsailos.conf`, 256 MiB, max 1024 MiB); su Bookworm `dphys-swapfile`.
 - `disable_splash=1` aggiunto da `63-SplashScreen`.

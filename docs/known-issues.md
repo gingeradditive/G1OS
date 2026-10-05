@@ -16,7 +16,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B04](#b04) | ~~Media~~ ✅ | Rename utente | Molti path `/home/pi` non vengono corretti da `postrename` — **risolto (solo utente `pi`)** |
 | [B05](#b05) | ~~Media~~ ✅ | Rename utente | `postrename` può abortire a metà lasciando i servizi fermi — **risolto da upstream** |
 | [B06](#b06) | ~~Media~~ ✅ | Boot | Splash screen: parametri quiet scritti nel `cmdline.txt` sbagliato — **risolto** |
-| [B07](#b07) | Bassa | Hardware | Pulsante di spegnimento su GPIO3 in conflitto con I2C abilitato — **non si corregge** |
+| [B07](#b07) | ~~Alta~~ ✅ | Hardware | Pulsante di spegnimento non funziona su Trixie (GPIO3 occupato dall'I2C) — **risolto** |
 | [B08](#b08) | ~~Media~~ ✅ | USB | Montaggio chiavette: solo partizioni `sdX[0-9]`, un solo device alla volta — **risolto** |
 | [B09](#b09) | ~~Media~~ ✅ | Pacchetti | `initramfs-tools` resta in hold per sempre sull'immagine finale — **risolto (hold rimosso)** |
 | [B10](#b10) | ~~Bassa~~ ✅ | udev | Virgola mancante nelle regole udev Wi-Fi powersave e CAN — **risolto** |
@@ -45,7 +45,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 
 Tutti i `git clone` dei moduli `5x`/`6x` prendono `HEAD` del branch di default (Mainsail: `releases/latest`). Rebuildare lo stesso commit G1OS in giorni diversi produce immagini diverse; un commit rotto su klipper4pellet / klipperscreen4pellet / G1-Configs / Moonraker finisce direttamente nell'immagine.
 
-- Dove: `modules/generic/50-klipper4pallet`, `51-moonraker`, `52-mainsail`, `53-crowsnest`, `54-timelapse`, `55-sonar`, `56-klipperscreen4pellet`, `57-Kiauh`, `58-Obico`, `60-Kamp`, `62-PowerButton`, `69-G1Config`.
+- Dove: `modules/generic/50-klipper4pallet`, `51-moonraker`, `52-mainsail`, `53-crowsnest`, `54-timelapse`, `55-sonar`, `56-klipperscreen4pellet`, `57-Kiauh`, `58-Obico`, `60-Kamp`, `69-G1Config`.
 - Conferma: confronta `git -C ~/<repo> log -1` su due unità flashate da build diverse.
 - Fix: aggiungere `-b <tag>` / `git checkout <sha>` almeno per i repo Ginger (klipper4pellet, klipperscreen4pellet, G1-Configs), magari definendo le versioni in `00-config`. Per bug di regressione tra due versioni dell'immagine, **prima** di cercare nel codice G1OS confrontare i commit dei repo esterni.
 
@@ -85,7 +85,6 @@ Se in Raspberry Pi Imager si sceglie un utente diverso da `pi`, la home viene sp
 | symlink assoluto `config/KAMP → /home/pi/Klipper-Adaptive-Meshing-Purging/Configuration` | `60-Kamp:41` |
 | `splashscreen.service` → `/home/pi/printer_data/config/splash.png` | `63-SplashScreen:32` |
 | `g1-flask.service` (`/home/pi/G1-Configs/Flask`), tema Mainsail in `/home/pi/printer_data/config/.theme`, `chown pi:pi` | `G1-Configs/install.sh` (path scritti a mano) |
-| pi-power-button | `62-PowerButton` |
 | `usbstick-handler`, symlink `gcodes/media` | ok (path assoluto `/media`) |
 
 Inoltre `postrename` usa `sed 's/pi/<user>/g'` su interi file: sostituisce **ogni** occorrenza di "pi" (es. `api`, `pip`, `spi`, `gpio` se presenti), fragile per unit file aggiunti in futuro.
@@ -120,14 +119,14 @@ Altri dettagli: l'immagine `splash.png` non è fornita da questo repo (deve arri
 - Fix: usare `"$BOOT_PATH"/cmdline.txt` e `"$BOOT_PATH"/config.txt`.
 
 ### B07
-**Power button su GPIO3 vs I2C** — Bassa — **Non si corregge (decisione 2026-10-05)**
+**Pulsante di spegnimento non funziona su Trixie** — ✅ Risolto (2026-10-05)
 
-> L'immagine è destinata **solo a Raspberry Pi 4**, quindi l'incompatibilità di `RPi.GPIO` con Pi 5 non è rilevante. Non modificare il modulo `62-PowerButton`. Resta da tenere presente il conflitto con l'I2C se si collegano dispositivi I2C.
+> Fix: rimosso il modulo `62-PowerButton` (Howchoo/pi-power-button, non più mantenuto) e sostituito con l'overlay nativo `dtoverlay=gpio-shutdown,gpio_pin=3,active_low=1,gpio_pull=up` in `modules/raspberry/files/boot-config.txt`. Il kernel genera `KEY_POWER` e `systemd-logind` spegne; la pressione dopo l'halt riaccende il Pi (solo GPIO3). Rimosso `dtparam=i2c_arm=on`: la G1 non usa I2C sul connettore GPIO, e su Bookworm il listener toglieva comunque il pin all'I2C a ogni boot.
 
-`pi-power-button` ascolta su GPIO3 (pin 5), che è anche **SCL dell'I2C** abilitato da `boot-config.txt:53` (`dtparam=i2c_arm=on`). Un dispositivo I2C sul bus può causare spegnimenti indesiderati, o il pulsante può interferire con l'I2C.
+Causa (log da una G1 con l'immagine Trixie): su Trixie `RPi.GPIO` è lo shim `rpi-lgpio`, che richiede il pin al kernel via `/dev/gpiochip`. Con `i2c_arm=on` GPIO3 è in ALT0 (`pinctrl get 3` → `a0 … GPIO3 = SCL1`) e `GPIO.setup(3, …)` fallisce subito (`xGpioHandleRequest: Invalid argument`, `lgpio.error: 'unexpected error'`). Lo script Python muore all'avvio, mentre il servizio SysV generato resta `active (exited)`. Su Bookworm il vecchio `RPi.GPIO` scriveva direttamente nei registri e il problema non si vedeva.
 
-- Conferma: `systemctl status listen-for-shutdown` / `ps aux | grep listen-for-shutdown`.
-- Fix: valutare `dtoverlay=gpio-shutdown` in `boot-config.txt` (nativo, funziona su tutti i modelli) invece del repo esterno.
+- Conferma: `pinctrl get 3` → `ip pu | hi // GPIO3 = input`; `grep -A4 -i shutdown /proc/bus/input/devices` mostra il device `gpio-keys`; pressione → `journalctl -b -1 -u systemd-logind` riporta «Power key pressed».
+- Non riattivare `i2c_arm` senza spostare il pulsante: l'overlay e l'I2C si contendono GPIO3 e uno dei due driver non parte.
 
 ### B08
 **Montaggio chiavette USB limitato** — ✅ Risolto (2026-10-05)
@@ -226,7 +225,7 @@ Da `426a216` (Trixie non ha più un utente preconfigurato): `BASE_PASSWORD=raspb
 **Componenti G1 da verificare su Trixie** — Media
 
 Verificato in modo statico (2026-10-05): tutti i pacchetti apt dei moduli G1 esistono in Trixie; i requirements di klipper4pellet hanno già pin per Python ≥ 3.12; la build CI su Trixie (`build.yml`) completa tutti i moduli.
-- `62-PowerButton`: l'immagine base Trixie lite (2026-09-15) include `python-is-python3` (lo shebang `#!/usr/bin/env python` funziona) e `python3-rpi-lgpio` (shim `RPi.GPIO`). Lo script init.d gira tramite il generatore SysV di systemd 257 (deprecato: si romperà con systemd ≥ 258 / Debian Forky). Da verificare a runtime: `wait_for_edge` con rpi-lgpio.
+- Power button: `62-PowerButton` falliva su Trixie (rpi-lgpio non può prendere GPIO3 occupato dall'I2C), sostituito con `dtoverlay=gpio-shutdown`, vedi [B07](#b07).
 - `56-klipperscreen4pellet`: `PyGObject<3.51` compila su Python 3.13 (deps di build in `system-dependencies.json`, CI verde).
 - `58-Obico`: modulo rimosso (2026-10-05), Obico non è usato sulla G1.
 - `G1-Configs/install.sh`: `sudo pip3 install flask` fallisce per PEP 668 (innocuo: Flask arriva da apt in `69-G1Config`).
@@ -236,7 +235,7 @@ Checklist su Pi 4 (immagine da `build.yml`):
 2. Primo boot con utente `foo` + password in Imager ([B04](#b04)): login come `pi` con la password scelta, `/home/pi` intatta, `journalctl -t mainsailos-prerename`.
 3. `ls -l ~/printer_data/config/` tutto `pi:pi`; salvataggio di `moonraker.conf` da Mainsail ([B03](#b03)).
 4. Update Manager: KlipperScreen non "invalid" ([B02](#b02)).
-5. Pulsante di spegnimento: `systemctl status listen-for-shutdown`, pressione → shutdown.
+5. Pulsante di spegnimento ([B07](#b07)): `pinctrl get 3` = input con pull-up, pressione → shutdown, nuova pressione → riaccensione.
 6. `ls ~` non contiene `moonraker-obico` (modulo rimosso).
 7. Chiavetta senza tabella partizioni → file in `gcodes/media` ([B08](#b08)).
 8. `udevadm verify /etc/udev/rules.d/*.rules`, `iw wlan0 get power_save` = `off` ([B10](#b10)).
