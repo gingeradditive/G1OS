@@ -220,6 +220,8 @@ Da `426a216` (Trixie non ha più un utente preconfigurato): `BASE_PASSWORD=raspb
 `config.yml` usa `https://downloads.raspberrypi.org/raspios_lite_arm64_latest.torrent` (+ `.sha256`). Ogni nuova release di Raspberry Pi OS cambia la base senza commit in questo repo (stesso problema di [B01](#b01)); se torrent e sha256 vengono aggiornati in momenti diversi, la verifica fallisce.
 - Fix: usare l'URL datato `…/images/raspios_lite_arm64-AAAA-MM-GG/…` come si faceva per Bookworm.
 
+> **2026-10-05:** il `.torrent` della release 2026-09-15 non ha web seed e il tracker ne rifiuta l'info-hash («Requested download is not authorized»): con DHT disabilitato aria2c restava a 0% all'infinito e bloccava la pipeline. Ora si scarica via HTTPS da `…/raspios_lite_arm64_latest` (302 verso il `.img.xz` datato, `wget --trust-server-names` per mantenere il nome usato dal `.sha256`); il passo torrent ha comunque `timeout-minutes: 30`.
+
 ### B18
 **Componenti G1 da verificare su Trixie** — Media
 
