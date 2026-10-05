@@ -23,6 +23,6 @@ Quindi un bug "di G1OS" ricade quasi sempre in una di queste categorie:
 
 ## Stato del repository (al 2026-10-05)
 
-- Versione: `2.0.10` (file `VERSION`), branch principale `develop`.
-- Unico target attivo in `config.yml`: **Raspberry Pi OS Bookworm Lite arm64**. L'hardware supportato è **solo Raspberry Pi 4** (`config.yml` elenca ancora anche Pi 3 e Pi 5 nei metadati per RPi Imager). I target armhf e Orange Pi/Armbian sono commentati: i moduli `modules/armbian/` e `modules/special/` esistono ma **non vengono usati** nella build attuale.
+- Branch principale `develop`. Dal sync con upstream (MainsailOS 3.0.0, branch `chore/sync-upstream`) la base è **Raspberry Pi OS Trixie Lite arm64** (Debian 13, Python 3.13), con provisioning **cloud-init** per Raspberry Pi Imager.
+- Unico target attivo in `config.yml`: `raspberry_pi-arm64-trixie`. L'hardware supportato è **solo Raspberry Pi 4** (`config.yml` elenca ancora anche Pi 3 e Pi 5 nei metadati per RPi Imager). I target armhf e Orange Pi/Armbian sono commentati: i moduli `modules/armbian/` e `modules/special/` esistono ma **non vengono usati** nella build attuale.
 - Il README e `CONTRIBUTING.md` sono ancora in gran parte quelli di MainsailOS (link, Discord, menzione di CustomPiOS: in realtà la build usa **CustoPiZer** dal 2025-05, commit `26eee8e`).

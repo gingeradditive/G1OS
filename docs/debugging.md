@@ -46,7 +46,7 @@ grep -E 'enable_uart|disable-bt|i2c|spi' /boot/firmware/config.txt
 cat /boot/firmware/cmdline.txt
 
 # Regole udev (B10)
-journalctl -u systemd-udevd -b --no-pager | grep -i -E "rules|invalid" || true
+udevadm verify /etc/udev/rules.d/*.rules   # disponibile da systemd 253 (Trixie ha la 257)
 iw dev wlan0 get power_save
 
 # Wi-Fi headless (B13)
@@ -56,8 +56,10 @@ ls -l /etc/NetworkManager/system-connections/
 # Chiavette USB (B08)
 journalctl -u 'usbstick-handler@*' -b --no-pager; mount | grep /media
 
-# Rename utente (B04/B05)
-ls -l /postrename 2>/dev/null; cat /etc/rc.local
+# Rename utente (B04/B05) - cloud-init
+systemctl status mainsailos-prerename mainsailos-postrename
+cat /var/log/mainsailos-postrename.log; ls /var/lib/mainsailos/
+cloud-init status --long
 grep -rl '/home/pi' /etc/systemd/system ~/printer_data 2>/dev/null
 ```
 
@@ -67,6 +69,7 @@ Klipper non si connette ("can't connect to klipper"): vedi [B12](known-issues.md
 
 - Ogni push su `develop` e ogni PR che tocca `modules/**`, `config.yml` o `build.yml` lancia `build.yml`; si può lanciare anche a mano (*Actions → Build Images → Run workflow*) su un branch.
 - L'immagine prodotta è scaricabile come artifact della run (`<data>-G1OS-<target>-<versione>.img-artifacts`).
+- L'immagine base è `raspios_lite_arm64_latest`: se una build si rompe senza cambi nel repo, verificare se Raspberry Pi ha pubblicato una nuova immagine.
 - Tempi: download torrent + build arm64 ≈ 1 ora; per iterare velocemente su un modulo conviene prima provarlo a mano su un Pi già flashato (vedi §4).
 
 Errori tipici in build:
