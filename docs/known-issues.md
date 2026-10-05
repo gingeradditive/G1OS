@@ -17,7 +17,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B05](#b05) | ~~Media~~ ✅ | Rename utente | `postrename` può abortire a metà lasciando i servizi fermi — **risolto da upstream** |
 | [B06](#b06) | ~~Media~~ ✅ | Boot | Splash screen: parametri quiet scritti nel `cmdline.txt` sbagliato — **risolto** |
 | [B07](#b07) | Bassa | Hardware | Pulsante di spegnimento su GPIO3 in conflitto con I2C abilitato — **non si corregge** |
-| [B08](#b08) | Media | USB | Montaggio chiavette: solo partizioni `sdX[0-9]`, un solo device alla volta |
+| [B08](#b08) | ~~Media~~ ✅ | USB | Montaggio chiavette: solo partizioni `sdX[0-9]`, un solo device alla volta — **risolto** |
 | [B09](#b09) | ~~Media~~ ✅ | Pacchetti | `initramfs-tools` resta in hold per sempre sull'immagine finale — **risolto (hold rimosso)** |
 | [B10](#b10) | Bassa | udev | Virgola mancante nelle regole udev Wi-Fi powersave e CAN |
 | [B11](#b11) | ~~Bassa~~ ✅ | Swap | Il resize dello swap non viene mai eseguito — **risolto da upstream** |
@@ -124,7 +124,9 @@ Altri dettagli: l'immagine `splash.png` non è fornita da questo repo (deve arri
 - Fix: valutare `dtoverlay=gpio-shutdown` in `boot-config.txt` (nativo, funziona su tutti i modelli) invece del repo esterno.
 
 ### B08
-**Montaggio chiavette USB limitato** — Media
+**Montaggio chiavette USB limitato** — ✅ Risolto (2026-10-05)
+
+> Fix: la regola udev ora è `SUBSYSTEM=="block", KERNEL=="sd[a-z]*", ENV{ID_FS_USAGE}=="filesystem"` (monta anche chiavette senza tabella partizioni e partizioni ≥10) e il messaggio usa `${ENABLEUSB_RULE_FILE}`. Il punto di mount unico `/media` e la sola lettura sono **voluti**: la stampante ha una sola porta USB e si supporta ufficialmente una partizione alla volta. Verifica: chiavetta formattata senza partizioni → file visibili in `gcodes/media`. Descrizione originale:
 
 `modules/generic/61-EnableUSB`:
 
