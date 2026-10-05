@@ -217,9 +217,20 @@ Da `426a216` (Trixie non ha più un utente preconfigurato): `BASE_PASSWORD=raspb
 ### B18
 **Componenti G1 da verificare su Trixie** — Media
 
-Verificato in modo statico (2026-10-05): tutti i pacchetti apt dei moduli G1 esistono in Trixie; i requirements di klipper4pellet hanno già pin per Python ≥ 3.12; le dipendenze di klipperscreen4pellet esistono. Restano da verificare sul Pi 4:
-- `62-PowerButton`: `listen-for-shutdown.py` usa `RPi.GPIO`, che il modulo non installa (su Trixie `python3-rpi.gpio` esiste ma potrebbe non essere preinstallato); l'installer usa `update-rc.d`/init.d (SysV, deprecato in systemd 257) e lancia il daemon dentro il chroot.
-- `58-Obico`: installer esterno, compatibilità con Python 3.13 non verificata.
-- `56-klipperscreen4pellet`: requirements con `PyGObject<3.51` (build da sorgente su Python 3.13).
+Verificato in modo statico (2026-10-05): tutti i pacchetti apt dei moduli G1 esistono in Trixie; i requirements di klipper4pellet hanno già pin per Python ≥ 3.12; la build CI su Trixie (`build.yml`) completa tutti i moduli.
+- `62-PowerButton`: l'immagine base Trixie lite (2026-09-15) include `python-is-python3` (lo shebang `#!/usr/bin/env python` funziona) e `python3-rpi-lgpio` (shim `RPi.GPIO`). Lo script init.d gira tramite il generatore SysV di systemd 257 (deprecato: si romperà con systemd ≥ 258 / Debian Forky). Da verificare a runtime: `wait_for_edge` con rpi-lgpio.
+- `56-klipperscreen4pellet`: `PyGObject<3.51` compila su Python 3.13 (deps di build in `system-dependencies.json`, CI verde).
+- `58-Obico`: installer esterno, avvio con Python 3.13 non verificato.
 - `G1-Configs/install.sh`: `sudo pip3 install flask` fallisce per PEP 668 (innocuo: Flask arriva da apt in `69-G1Config`).
-- Primo boot con utente personalizzato in Raspberry Pi Imager (flusso cloud-init) e senza personalizzazione.
+
+Checklist su Pi 4 (immagine da `build.yml`):
+1. Primo boot **senza** personalizzazione in Imager: login `pi`/`raspberry`, Mainsail e KlipperScreen funzionanti.
+2. Primo boot con utente `foo` + password in Imager ([B04](#b04)): login come `pi` con la password scelta, `/home/pi` intatta, `journalctl -t mainsailos-prerename`.
+3. `ls -l ~/printer_data/config/` tutto `pi:pi`; salvataggio di `moonraker.conf` da Mainsail ([B03](#b03)).
+4. Update Manager: KlipperScreen non "invalid" ([B02](#b02)).
+5. Pulsante di spegnimento: `systemctl status listen-for-shutdown`, pressione → shutdown.
+6. `systemctl status moonraker-obico`.
+7. Chiavetta senza tabella partizioni → file in `gcodes/media` ([B08](#b08)).
+8. `udevadm verify /etc/udev/rules.d/*.rules`, `iw wlan0 get power_save` = `off` ([B10](#b10)).
+9. `truncate -s 4096 ~/klipper/klippy/chelper/c_helper.so && sudo systemctl restart klipper` → Klipper riparte ([B12](#b12)).
+10. `headless_nm.txt` con password di 5 caratteri → connessione esistente intatta, errore in `journalctl -t headless_nm` ([B13](#b13)).
