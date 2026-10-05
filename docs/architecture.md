@@ -122,7 +122,7 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 
 | Servizio | Origine unit file | Note |
 |---|---|---|
-| `klipper.service` | `modules/generic/files/klipper.service` | Args in `printer_data/systemd/klipper.env`; `ExecStartPre` cancella `c_helper.so` vuoto |
+| `klipper.service` | `modules/generic/files/klipper.service` | Args in `printer_data/systemd/klipper.env`; `ExecStartPre` cancella `c_helper.so` se non caricabile (corrotto) |
 | `moonraker.service` | generato da `install-moonraker.sh` | porta 7125 |
 | `nginx.service` | pacchetto Debian | sito `/etc/nginx/sites-available/mainsail`, porta 80 |
 | `crowsnest.service` | `make install` di crowsnest | webcam 8080-8083 |

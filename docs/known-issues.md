@@ -21,7 +21,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B09](#b09) | ~~Media~~ ✅ | Pacchetti | `initramfs-tools` resta in hold per sempre sull'immagine finale — **risolto (hold rimosso)** |
 | [B10](#b10) | ~~Bassa~~ ✅ | udev | Virgola mancante nelle regole udev Wi-Fi powersave e CAN — **risolto** |
 | [B11](#b11) | ~~Bassa~~ ✅ | Swap | Il resize dello swap non viene mai eseguito — **risolto da upstream** |
-| [B12](#b12) | Bassa | Klipper | Pulizia `c_helper.so` corrotto solo se di dimensione 0 al runtime |
+| [B12](#b12) | ~~Bassa~~ ✅ | Klipper | Pulizia `c_helper.so` corrotto solo se di dimensione 0 al runtime — **risolto** |
 | [B13](#b13) | Bassa | Wi-Fi | `headless_nm`: password < 8 caratteri lascia una connessione rotta |
 | [B14](#b14) | Bassa | CI | `CustoPiZer@main` non bloccato |
 | [B15](#b15) | Bassa | Varie | Residui MainsailOS (link, patch, branding, variabili inesistenti) |
@@ -165,7 +165,9 @@ Descrizione originale:
 `modules/raspberry/10-config-raspberry:73` testa `${PICONFIG_SWAP_CONF_FILE}` (non definita) invece di `${SWAP_CONF_FILE}` ⇒ il blocco non viene mai eseguito, lo swap resta al default (100 MB). Correggere solo dopo aver valutato l'impatto sulla SD.
 
 ### B12
-**Pulizia `c_helper.so`** — Bassa
+**Pulizia `c_helper.so`** — ✅ Risolto (2026-10-05)
+
+> Fix: `ExecStartPre` in `klipper.service` prova a caricare `c_helper.so` con `ctypes.CDLL` (Python del venv) e lo cancella se non è caricabile; Klipper lo ricompila. Prefisso `-`: un errore del controllo non blocca l'avvio. `Wants=network-online.target` **non** aggiunto di proposito: Klipper non usa la rete e ritarderebbe l'avvio sulle stampanti offline (come upstream). Verifica: `truncate -s 4096 ~/klipper/klippy/chelper/c_helper.so && sudo systemctl restart klipper` → Klipper riparte. Descrizione originale:
 
 Il fix `ca4b0dd` rimuove `c_helper.so` in build e in `klipper.service` (`ExecStartPre`) cancella il file **solo se vuoto** (`-size 0`). Un file non vuoto ma corrotto (scrittura interrotta da spegnimento durante la prima compilazione) non viene rimosso ⇒ Klipper non parte ("can't connect to klipper").
 - Workaround sul campo: `rm ~/klipper/klippy/chelper/c_helper.so && sudo systemctl restart klipper`.

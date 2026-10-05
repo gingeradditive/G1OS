@@ -14,7 +14,9 @@ User=pi
 RemainAfterExit=yes
 WorkingDirectory=/home/pi/klipper
 EnvironmentFile=/home/pi/printer_data/systemd/klipper.env
-ExecStartPre=/bin/sh -c 'find /home/pi/klipper/klippy/chelper -maxdepth 1 -name c_helper.so -size 0 -delete'
+# Drop a truncated/corrupt c_helper.so (e.g. power loss during the first
+# build) so Klipper rebuilds it instead of failing to load it forever.
+ExecStartPre=-/bin/sh -c 'f=/home/pi/klipper/klippy/chelper/c_helper.so; [ ! -e "$$f" ] || /home/pi/klippy-env/bin/python -c "import ctypes, sys; ctypes.CDLL(sys.argv[1])" "$$f" 2>/dev/null || rm -f "$$f"'
 ExecStart=/home/pi/klippy-env/bin/python $KLIPPER_ARGS
 Restart=always
 RestartSec=10
