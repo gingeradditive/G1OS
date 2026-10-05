@@ -11,7 +11,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | ID | Sev. | Area | Titolo |
 |---|---|---|---|
 | [B01](#b01) | ~~Alta~~ — | Build | Repo esterni non bloccati a versione — **non è un bug (scelta voluta)** |
-| [B02](#b02) | Alta | Moonraker | `update_manager KlipperScreen` punta al repo upstream invece che a klipperscreen4pellet |
+| [B02](#b02) | ~~Alta~~ ✅ | Moonraker | `update_manager KlipperScreen` punta al repo upstream invece che a klipperscreen4pellet — **risolto** |
 | [B03](#b03) | Alta | Permessi | `moonraker.conf` e `KAMP_Settings.cfg` copiati da root → probabilmente non modificabili da Mainsail |
 | [B04](#b04) | Media | Rename utente | Molti path `/home/pi` non vengono corretti da `postrename` |
 | [B05](#b05) | ~~Media~~ ✅ | Rename utente | `postrename` può abortire a metà lasciando i servizi fermi — **risolto da upstream** |
@@ -43,7 +43,9 @@ Tutti i `git clone` dei moduli `5x`/`6x` prendono `HEAD` del branch di default (
 - Fix: aggiungere `-b <tag>` / `git checkout <sha>` almeno per i repo Ginger (klipper4pellet, klipperscreen4pellet, G1-Configs), magari definendo le versioni in `00-config`. Per bug di regressione tra due versioni dell'immagine, **prima** di cercare nel codice G1OS confrontare i commit dei repo esterni.
 
 ### B02
-**`update_manager KlipperScreen` punta al repo sbagliato** — Alta
+**`update_manager KlipperScreen` punta al repo sbagliato** — ✅ Risolto (2026-10-05)
+
+> Fix: `origin` → `gingeradditive/klipperscreen4pellet.git`, `primary_branch: master`, rimosso il commento "Uncomment to enable". Verificato che `scripts/system-dependencies.json` e `scripts/KlipperScreen-requirements.txt` esistono nel fork. Verifica sul dispositivo: KlipperScreen non deve risultare "invalid" nell'Update Manager. Descrizione originale:
 
 `modules/generic/files/moonraker_klipperscreen4pellet.conf:8` → `origin: https://github.com/KlipperScreen/KlipperScreen.git`, ma `~/KlipperScreen` è un clone di `gingeradditive/klipperscreen4pellet`. Moonraker confronta `origin` con il remote reale: il repo viene segnato come **invalid** (aggiornamenti bloccati) oppure, dopo un "recover", verrebbe riallineato all'upstream perdendo le modifiche pellet.
 
