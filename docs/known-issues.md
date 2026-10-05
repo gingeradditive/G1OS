@@ -22,7 +22,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B10](#b10) | ~~Bassa~~ ✅ | udev | Virgola mancante nelle regole udev Wi-Fi powersave e CAN — **risolto** |
 | [B11](#b11) | ~~Bassa~~ ✅ | Swap | Il resize dello swap non viene mai eseguito — **risolto da upstream** |
 | [B12](#b12) | ~~Bassa~~ ✅ | Klipper | Pulizia `c_helper.so` corrotto solo se di dimensione 0 al runtime — **risolto** |
-| [B13](#b13) | Bassa | Wi-Fi | `headless_nm`: password < 8 caratteri lascia una connessione rotta |
+| [B13](#b13) | ~~Bassa~~ ✅ | Wi-Fi | `headless_nm`: password < 8 caratteri lascia una connessione rotta — **risolto** |
 | [B14](#b14) | Bassa | CI | `CustoPiZer@main` non bloccato |
 | [B15](#b15) | Bassa | Varie | Residui MainsailOS (link, patch, branding, variabili inesistenti) |
 | [B16](#b16) | Media | Sicurezza | Credenziali di default `pi`/`raspberry` con SSH attivo |
@@ -174,7 +174,9 @@ Il fix `ca4b0dd` rimuove `c_helper.so` in build e in `klipper.service` (`ExecSta
 - Nota: `klipper.service` ha `After=network-online.target` senza `Wants=network-online.target` (l'ordinamento non ha effetto).
 
 ### B13
-**`headless_nm` con password non valida** — Bassa
+**`headless_nm` con password non valida** — ✅ Risolto (2026-10-05)
+
+> Fix: `validate_config` controlla SSID e password (tramite `wpa_passphrase`) **prima** di toccare i file: se non validi logga l'errore ed esce lasciando intatta la connessione esistente (anche quella di Imager, che prima veniva cancellata). `HIDDEN` vuoto o non valido → `false`. La connessione viene scritta in `.preconfigured.nmconnection.tmp` (0600) e spostata al posto di quella vecchia solo a fine generazione. `headless_nm.txt` non valido resta in `/boot/firmware` (va corretto dall'utente). Descrizione originale:
 
 `files/headless-nm/headless_nm:138`: con password < 8 o > 63 caratteri `wpa_passphrase` fallisce; con `set -e` lo script esce dopo aver già scritto `preconfigured.nmconnection` senza sezione di sicurezza e senza `chmod 0600` (`:212`) ⇒ NetworkManager ignora il file, e `headless_nm.txt` **non** viene cancellato. Anche `HIDDEN` vuoto produce `hidden=` (non valido).
 - Conferma: `journalctl -t headless_nm`.
