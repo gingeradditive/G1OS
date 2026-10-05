@@ -26,7 +26,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B14](#b14) | Bassa | CI | `CustoPiZer@main` non bloccato |
 | [B15](#b15) | Bassa | Varie | Residui MainsailOS (link, patch, branding, variabili inesistenti) — **in gran parte risolto** |
 | [B16](#b16) | Media | Sicurezza | Credenziali di default `pi`/`raspberry` con SSH attivo — **non si corregge (scelta consapevole)** |
-| [B17](#b17) | Media | Build | Immagine base `raspios_lite_arm64_latest` non bloccata |
+| [B17](#b17) | ~~Media~~ — | Build | Immagine base `raspios_lite_arm64_latest` non bloccata — **non è un bug (scelta voluta)** |
 | [B18](#b18) | Media | Trixie | Componenti G1 non ancora verificati su Trixie (power button, Obico, KlipperScreen fork) |
 
 ---
@@ -207,7 +207,9 @@ Da `426a216` (Trixie non ha più un utente preconfigurato): `BASE_PASSWORD=raspb
 - Alternative valutate e scartate per ora: `BASE_PASSWORD` non banale (comunque uguale su tutte le unità), SSH solo con chiave (`PasswordAuthentication no` + chiave Ginger).
 
 ### B17
-**Immagine base non bloccata** — Media
+**Immagine base non bloccata** — **Non è un bug (decisione 2026-10-05)**
+
+> Come [B01](#b01): si builda ai rilasci e si vuole l'ultima Raspberry Pi OS. Se una build fallisce sulla verifica sha256 nei giorni di uscita di una nuova release, rilanciarla più tardi. Descrizione originale:
 
 `config.yml` usa `https://downloads.raspberrypi.org/raspios_lite_arm64_latest.torrent` (+ `.sha256`). Ogni nuova release di Raspberry Pi OS cambia la base senza commit in questo repo (stesso problema di [B01](#b01)); se torrent e sha256 vengono aggiornati in momenti diversi, la verifica fallisce.
 - Fix: usare l'URL datato `…/images/raspios_lite_arm64-AAAA-MM-GG/…` come si faceva per Bookworm.
