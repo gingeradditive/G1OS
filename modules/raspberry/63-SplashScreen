@@ -18,8 +18,8 @@ source /files/00-config
 ########################################
 
 DEPS="fbi"
-SPLASHSCREEN_BOOT_CONFIG="/boot/firmware/config.txt"
-SPLASHSCREEN_CMDLINE_CONFIG="/boot/cmdline.txt"
+SPLASHSCREEN_BOOT_CONFIG="${BOOT_PATH}/config.txt"
+SPLASHSCREEN_CMDLINE_CONFIG="${BOOT_PATH}/cmdline.txt"
 SPLASHSCREEN_SERVICE_FILE="/etc/systemd/system/splashscreen.service"
 SPLASHSCREEN_SERVICE_CONTENT="[Unit]
 Description=Splash screen

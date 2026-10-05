@@ -23,7 +23,7 @@ jobs:
       matrix: ${{ steps.create-matrix.outputs.matrix }}
     steps:
       - name: "📥 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "🛠 Generate matrix from config.yml"
         id: create-matrix
@@ -38,13 +38,13 @@ jobs:
 
   build:
     needs: generate-matrix
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - name: "📥 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "#️⃣️ Set RELEASE_TAG from VERSION file"
         run: |
@@ -61,12 +61,13 @@ jobs:
 
       - name: "⬇ Download Image via Torrent"
         if: ${{ endsWith(matrix.img_download_url, '.torrent') }}
+        timeout-minutes: 30
         run: aria2c -d build --seed-time=0 --enable-dht=false "${{ matrix.img_download_url }}"
 
       - name: "⬇ Download Image via wget"
         if: ${{ !endsWith(matrix.img_download_url, '.torrent') }}
         working-directory: ./build
-        run: wget ${{ matrix.img_download_url }}
+        run: wget --trust-server-names --progress=dot:giga "${{ matrix.img_download_url }}"
 
       - name: "🔐 Verify image"
         working-directory: ./build
@@ -142,6 +143,7 @@ jobs:
           scripts:  "${{ github.workspace }}/scripts"
           config: "${{ github.workspace }}/config.local"
           environment: '{ "RELEASE_TAG": "${{ env.RELEASE_TAG }}"}'
+          custopizer: "main"
 
       - name: "✏ Rename image"
         working-directory: ./build
@@ -165,7 +167,7 @@ jobs:
           sha256sum ${{ env.IMAGE }}.xz > ${{ env.IMAGE }}.xz.sha256
 
       - name: "📋 Upload Artifacts"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.IMAGE }}-artifacts
           path: |

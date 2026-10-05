@@ -52,7 +52,38 @@ create_user_directories
 
 echo "Execute installer"
 pushd "moonraker" &> /dev/null || exit 1
+
+# Workaround for 32-bit ARM (armhf) builds:
+if [ "$(dpkg --print-architecture)" = "armhf" ]; then
+  echo "armhf detected: pre-installing pillow"
+  # Install pillow build dependencies before building from source
+  apt-get install --yes libjpeg-dev zlib1g-dev python3-virtualenv
+  MOONRAKER_VENV="/home/${BASE_USER}/moonraker-env"
+  sudo -u "${BASE_USER}" python3 -m virtualenv "${MOONRAKER_VENV}"
+  "${MOONRAKER_VENV}/bin/pip" install "pillow<=12.1.0,>=9.5.0"
+  chown -R "${BASE_USER}":"${BASE_USER}" "${MOONRAKER_VENV}"
+fi
+
 sudo -u "${BASE_USER}" ./scripts/install-moonraker.sh -s -z
+
+########################################
+# Allowed services (moonraker.asvc)    #
+########################################
+
+# Moonraker writes moonraker.asvc on its first start without fsync: a power
+# cut right after it leaves an empty file, which Moonraker never regenerates
+# ("Moonraker is not permitted to restart service 'crowsnest'").
+# Ship it pre-filled and drop it before start if it is ever empty again.
+ASVC_FILE="/home/${BASE_USER}/printer_data/moonraker.asvc"
+if [ ! -s "${ASVC_FILE}" ]; then
+    sudo -u "${BASE_USER}" cp moonraker/assets/default_allowed_services "${ASVC_FILE}"
+fi
+mkdir -p /etc/systemd/system/moonraker.service.d
+cat > /etc/systemd/system/moonraker.service.d/10-asvc.conf <<EOF
+[Service]
+ExecStartPre=-/usr/bin/find ${ASVC_FILE} -maxdepth 0 -empty -delete
+EOF
+
 popd &> /dev/null || exit 1
 
 ########################################
@@ -65,7 +96,7 @@ popd &> /dev/null || exit 1
 # Copy moonraker.conf to config dir    #
 ########################################
 
-cp /files/moonraker.conf /home/"${BASE_USER}"/printer_data/config/moonraker.conf
+sudo -u "${BASE_USER}" cp /files/moonraker.conf /home/"${BASE_USER}"/printer_data/config/moonraker.conf
 
 ########################################
 # Enable service                       #

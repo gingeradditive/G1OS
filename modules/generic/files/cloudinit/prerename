@@ -1,0 +1,168 @@
+#!/bin/bash
+#### Pre-rename for cloud-init based images
+####
+#### Runs Before=cloud-init-local.service. G1OS supports only the default
+#### "@BASE_USER@" user (G1 components hard-code /home/@BASE_USER@, see B04 in
+#### docs/known-issues.md): if /boot[/firmware]/user-data requests a different
+#### user, the user-data is rewritten so cloud-init's users module applies the
+#### requested password, SSH keys and sudo rules to the pre-existing
+#### "@BASE_USER@" user instead of creating/renaming one.
+
+set -eu
+export LC_ALL=C
+
+LOG_TAG="mainsailos-prerename"
+STATE_DIR="/var/lib/mainsailos"
+STATE_FILE="${STATE_DIR}/prerename.done"
+USER_DATA_CANDIDATES=(/boot/firmware/user-data /boot/user-data)
+
+log() {
+    logger -s -t "${LOG_TAG}" -- "$*" || echo "${LOG_TAG}: $*"
+}
+
+find_userdata() {
+    local candidate
+    for candidate in "${USER_DATA_CANDIDATES[@]}"; do
+        if [[ -f "${candidate}" ]]; then
+            printf '%s\n' "${candidate}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+parse_user() {
+    python3 - "$1" <<'PY'
+import sys, yaml
+
+with open(sys.argv[1], "r") as fh:
+    data = yaml.safe_load(fh) or {}
+
+users = data.get("users")
+if not isinstance(users, list):
+    sys.exit(0)
+
+for user in users:
+    name = None
+    passwd = ""
+    lock = False
+
+    if isinstance(user, str):
+        name = user
+    elif isinstance(user, dict):
+        name = user.get("name")
+        passwd = user.get("passwd") or ""
+        lock = bool(user.get("lock_passwd", False))
+
+    if name and name not in ("default", "@BASE_USER@"):
+        print(name)
+        print(passwd)
+        print("true" if lock else "false")
+        sys.exit(0)
+PY
+}
+
+load_requested_user() {
+    local userdata="$1"
+    local parsed_user parse_rc
+
+    log "parsing user-data at ${userdata}"
+
+    set +e
+    parsed_user="$(parse_user "${userdata}")"
+    parse_rc=$?
+    set -e
+
+    if [[ ${parse_rc} -ne 0 ]]; then
+        log "ERROR: failed to parse ${userdata} (python exit ${parse_rc}); refusing to rename '@BASE_USER@' -- fix the user-data and reboot"
+        exit 1
+    fi
+
+    mapfile -t USER_FIELDS <<< "${parsed_user}"
+
+    NEW_USER="$(printf '%s' "${USER_FIELDS[0]:-}" | tr -d '[:space:]')"
+    NEW_PASSWD="${USER_FIELDS[1]:-}"
+    NEW_LOCK_PASSWD="${USER_FIELDS[2]:-false}"
+}
+
+nothing_to_map() {
+    if [[ -z "${NEW_USER}" ]]; then
+        log "user-data keeps '@BASE_USER@' (or has no custom user), nothing to do"
+        return 0
+    fi
+
+    if ! id -u @BASE_USER@ >/dev/null 2>&1; then
+        log "no '@BASE_USER@' user present, nothing to do"
+        return 0
+    fi
+
+    return 1
+}
+
+map_user_to_base() {
+    local userdata="$1"
+
+    log "G1OS supports only '@BASE_USER@': mapping requested user '${NEW_USER}' to '@BASE_USER@' in ${userdata}"
+
+    python3 - "${userdata}" "${NEW_USER}" <<'PY'
+import os, sys, yaml
+
+path, requested = sys.argv[1], sys.argv[2]
+
+with open(path, "r") as fh:
+    data = yaml.safe_load(fh) or {}
+
+users = data.get("users") or []
+for i, user in enumerate(users):
+    if user == requested:
+        users[i] = "@BASE_USER@"
+    elif isinstance(user, dict) and user.get("name") == requested:
+        user["name"] = "@BASE_USER@"
+
+tmp = path + ".tmp"
+with open(tmp, "w") as fh:
+    fh.write("#cloud-config\n")
+    yaml.safe_dump(data, fh, default_flow_style=False, sort_keys=False)
+os.replace(tmp, path)
+PY
+}
+
+apply_password() {
+    # cloud-init skips `passwd` for a pre-existing user, so set it here.
+    if [[ -n "${NEW_PASSWD}" && "${NEW_LOCK_PASSWD}" != "true" ]]; then
+        log "applying passwd hash from user-data to '@BASE_USER@'"
+        usermod -p "${NEW_PASSWD}" @BASE_USER@
+    fi
+}
+
+main() {
+    mkdir -p "${STATE_DIR}"
+    if [[ -f "${STATE_FILE}" ]]; then
+        log "already completed, nothing to do"
+        exit 0
+    fi
+
+    local userdata
+    userdata="$(find_userdata)"
+    if [[ -z "${userdata}" ]]; then
+        log "no user-data found, nothing to do"
+        touch "${STATE_FILE}"
+        exit 0
+    fi
+
+    load_requested_user "${userdata}"
+    if nothing_to_map; then
+        touch "${STATE_FILE}"
+        exit 0
+    fi
+
+    map_user_to_base "${userdata}"
+    apply_password
+
+    touch "${STATE_FILE}"
+    log "user-data mapped; cloud-init will configure '@BASE_USER@' next"
+
+    exit 0
+}
+
+main
