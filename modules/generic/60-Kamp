@@ -38,8 +38,8 @@ pushd "/home/${BASE_USER}" &> /dev/null || exit 1
 
 echo "Cloning Repository"
 sudo -u "${BASE_USER}" git clone ${REPO} Klipper-Adaptive-Meshing-Purging
-ln -s /home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging/Configuration /home/${BASE_USER}/printer_data/config/KAMP
-cp /home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging/Configuration/KAMP_Settings.cfg /home/${BASE_USER}/printer_data/config/KAMP_Settings.cfg
+sudo -u "${BASE_USER}" ln -s /home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging/Configuration /home/${BASE_USER}/printer_data/config/KAMP
+sudo -u "${BASE_USER}" cp /home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging/Configuration/KAMP_Settings.cfg /home/${BASE_USER}/printer_data/config/KAMP_Settings.cfg
 
 ########################################
 # Return to saved directory            #

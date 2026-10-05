@@ -77,7 +77,7 @@ popd &> /dev/null || exit 1
 # Copy moonraker.conf to config dir    #
 ########################################
 
-cp /files/moonraker.conf /home/"${BASE_USER}"/printer_data/config/moonraker.conf
+sudo -u "${BASE_USER}" cp /files/moonraker.conf /home/"${BASE_USER}"/printer_data/config/moonraker.conf
 
 ########################################
 # Enable service                       #

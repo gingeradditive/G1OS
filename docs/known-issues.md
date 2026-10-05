@@ -12,7 +12,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 |---|---|---|---|
 | [B01](#b01) | ~~Alta~~ — | Build | Repo esterni non bloccati a versione — **non è un bug (scelta voluta)** |
 | [B02](#b02) | ~~Alta~~ ✅ | Moonraker | `update_manager KlipperScreen` punta al repo upstream invece che a klipperscreen4pellet — **risolto** |
-| [B03](#b03) | Alta | Permessi | `moonraker.conf` e `KAMP_Settings.cfg` copiati da root → probabilmente non modificabili da Mainsail |
+| [B03](#b03) | ~~Alta~~ ✅ | Permessi | `moonraker.conf` e `KAMP_Settings.cfg` copiati da root → non modificabili da Mainsail — **risolto** |
 | [B04](#b04) | Media | Rename utente | Molti path `/home/pi` non vengono corretti da `postrename` |
 | [B05](#b05) | ~~Media~~ ✅ | Rename utente | `postrename` può abortire a metà lasciando i servizi fermi — **risolto da upstream** |
 | [B06](#b06) | ~~Media~~ ✅ | Boot | Splash screen: parametri quiet scritti nel `cmdline.txt` sbagliato — **risolto** |
@@ -54,7 +54,9 @@ Tutti i `git clone` dei moduli `5x`/`6x` prendono `HEAD` del branch di default (
 - Nota: i commenti nello stesso file ("Uncomment to enable") non corrispondono, la sezione è già attiva.
 
 ### B03
-**File di config creati da root** — Alta (da confermare)
+**File di config creati da root** — ✅ Risolto (2026-10-05)
+
+> Fix: in `51-moonraker` e `60-Kamp` `cp`/`ln -s` girano con `sudo -u "${BASE_USER}"`. Effetto collaterale scoperto: `G1-Configs/install.sh` (eseguito come `pi`, senza `set -e`) copia il proprio `Configs/moonraker.conf` sopra quello esistente; con il file di root la copia falliva in silenzio e restava il `moonraker.conf` di G1OS. Ora vince quello di G1-Configs. Verifica: `ls -l ~/printer_data/config/` (tutto `pi:pi`) e salvataggio di `moonraker.conf` da Mainsail. Descrizione originale:
 
 - `modules/generic/51-moonraker:68` → `cp /files/moonraker.conf …/config/moonraker.conf` eseguito da root ⇒ owner `root:root`.
 - `modules/generic/60-Kamp:42` → `cp …/KAMP_Settings.cfg …/config/` da root.
