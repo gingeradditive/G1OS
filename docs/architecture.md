@@ -12,7 +12,6 @@ modules/
     files/
   armbian/                 # Script solo per type: armbian (attualmente inutilizzati)
   special/                 # Script per singola board, elencati in special_modules (inutilizzati)
-patches/                   # Script legacy di MainsailOS da lanciare a mano su dispositivi vecchi (obsoleti)
 .github/workflows/
   build.yml                # Build su push a develop / PR / manuale → artifact
   release.yml              # Release manuale: bump VERSION, tag, build, upload, rpi-imager.json, changelog
@@ -67,7 +66,7 @@ Tutti i moduli usano `set -xe`: **un comando che fallisce interrompe la build** 
 | 4 | `30-headless-nm` | generic |
 | 5 | `31-wifi-powersave-off` | generic |
 | 6 | `32-canbus` | generic |
-| 7 | `50-klipper4pallet` | generic |
+| 7 | `50-klipper4pellet` | generic |
 | 8 | `51-moonraker` | generic |
 | 9 | `52-mainsail` | generic |
 | 10 | `53-crowsnest` | generic |

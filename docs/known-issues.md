@@ -24,7 +24,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B12](#b12) | ~~Bassa~~ ✅ | Klipper | Pulizia `c_helper.so` corrotto solo se di dimensione 0 al runtime — **risolto** |
 | [B13](#b13) | ~~Bassa~~ ✅ | Wi-Fi | `headless_nm`: password < 8 caratteri lascia una connessione rotta — **risolto** |
 | [B14](#b14) | Bassa | CI | `CustoPiZer@main` non bloccato |
-| [B15](#b15) | Bassa | Varie | Residui MainsailOS (link, patch, branding, variabili inesistenti) |
+| [B15](#b15) | Bassa | Varie | Residui MainsailOS (link, patch, branding, variabili inesistenti) — **in gran parte risolto** |
 | [B16](#b16) | Media | Sicurezza | Credenziali di default `pi`/`raspberry` con SSH attivo |
 | [B17](#b17) | Media | Build | Immagine base `raspios_lite_arm64_latest` non bloccata |
 | [B18](#b18) | Media | Trixie | Componenti G1 non ancora verificati su Trixie (power button, Obico, KlipperScreen fork) |
@@ -187,7 +187,9 @@ Il fix `ca4b0dd` rimuove `c_helper.so` in build e in `klipper.service` (`ExecSta
 `.github/workflows/build.yml:139` e `release.yml:201` usano `OctoPrint/CustoPiZer@main`: una modifica upstream può rompere la build senza cambi in questo repo. Fissare a un SHA.
 
 ### B15
-**Residui MainsailOS** — Bassa
+**Residui MainsailOS** — Bassa — in gran parte risolto (2026-10-05)
+
+> Fatto: rimossa `patches/`; `cliff.toml` punta a `gingeradditive/G1OS`; `README.md` e `CONTRIBUTING.md` riscritti per G1OS (con credits a MainsailOS/Mainsail Crew); `config.yml` dichiara solo `pi4-64bit`; tolto "SV1" da `klipper.service`; modulo rinominato `50-klipper4pellet`. **Restano aperti**: icona Imager `os.mainsail.xyz/rpi-imager.png` in `config.yml` (serve un PNG Ginger ospitato), link Discord Mainsail in `.github/ISSUE_TEMPLATE/config.yml` e `.github/label-actions.yml`, `.github/FUNDING.yml` (Patreon/Ko-fi Mainsail), testo `description` in `config.yml`. Descrizione originale:
 
 - `patches/*.sh`: URL `mainsail-crew/G1OS` inesistenti, pensati per Bullseye. Da rimuovere o riscrivere.
 - `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md` (link `mainsail-crew/MainsailOS`), issue template, `rpi_json.icon` (`os.mainsail.xyz`): branding non G1.

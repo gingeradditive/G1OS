@@ -30,7 +30,7 @@ Legenda colonna **Pin**: se il repo esterno è bloccato a una versione. `HEAD` =
 | `30-headless-nm` | installa `uuid`; copia `headless_nm.txt.template` e `WiFi-README.txt` in `$BOOT_PATH`; installa `/usr/local/bin/headless_nm` + `headless_nm.service` | — | — |
 | `31-wifi-powersave-off` | regola udev `070-wifi-powersave.rules` (`iw <wlan> set power_save off`) | — | — |
 | `32-canbus` | abilita `systemd-networkd`, disabilita `-wait-online`, regola udev `tx_queue_len=128` e `25-can.network` (BitRate 1M) | — | — |
-| `50-klipper4pallet` | deps (toolchain AVR/ARM, numpy, matplotlib, `libatlas-base-dev` solo se esiste in apt), gruppi `tty,dialout`, clona **klipper4pellet** in `~/klipper`, venv `~/klippy-env` + `numpy` (senza pin: `numpy<1.26` non supporta Python 3.13), **rimuove `c_helper.so`**, installa `klipper.service` + `klipper.env` | gingeradditive/klipper4pellet | HEAD |
+| `50-klipper4pellet` | deps (toolchain AVR/ARM, numpy, matplotlib, `libatlas-base-dev` solo se esiste in apt), gruppi `tty,dialout`, clona **klipper4pellet** in `~/klipper`, venv `~/klippy-env` + `numpy` (senza pin: `numpy<1.26` non supporta Python 3.13), **rimuove `c_helper.so`**, installa `klipper.service` + `klipper.env` | gingeradditive/klipper4pellet | HEAD |
 | `51-moonraker` | clona Moonraker, (solo armhf: pre-installa pillow nel venv), esegue `scripts/install-moonraker.sh -s -z`, copia `moonraker.conf` | Arksine/moonraker | HEAD |
 | `52-mainsail` | nginx + sito `mainsail`, logrotate 2 giorni, scarica l'ultima `mainsail.zip`, aggiunge `www-data` al gruppo `pi`, clona `mainsail-config` e linka `mainsail.cfg` | mainsail-crew/mainsail (latest release), mainsail-config | latest / HEAD |
 | `53-crowsnest` | clona crowsnest (branch di default = `v5`), `make install` unattended: le dipendenze le installa l'installer di crowsnest | mainsail-crew/crowsnest | HEAD (v5) |
@@ -92,4 +92,3 @@ legge `SSID`, `PASSWORD`, `HIDDEN`, `REGDOMAIN` → scrive `/etc/NetworkManager/
 ## Moduli non usati
 
 - `modules/armbian/*`, `modules/special/*`: ereditati da MainsailOS per Orange Pi/Armbian; disattivati in `config.yml`. Non hanno le personalizzazioni G1 (splash, postrename…).
-- `patches/*`: script per MainsailOS 1.x/Bullseye. Gli URL puntano a `mainsail-crew/G1OS` (inesistente). Non usare.
