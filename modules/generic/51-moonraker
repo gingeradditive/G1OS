@@ -65,6 +65,25 @@ if [ "$(dpkg --print-architecture)" = "armhf" ]; then
 fi
 
 sudo -u "${BASE_USER}" ./scripts/install-moonraker.sh -s -z
+
+########################################
+# Allowed services (moonraker.asvc)    #
+########################################
+
+# Moonraker writes moonraker.asvc on its first start without fsync: a power
+# cut right after it leaves an empty file, which Moonraker never regenerates
+# ("Moonraker is not permitted to restart service 'crowsnest'").
+# Ship it pre-filled and drop it before start if it is ever empty again.
+ASVC_FILE="/home/${BASE_USER}/printer_data/moonraker.asvc"
+if [ ! -s "${ASVC_FILE}" ]; then
+    sudo -u "${BASE_USER}" cp moonraker/assets/default_allowed_services "${ASVC_FILE}"
+fi
+mkdir -p /etc/systemd/system/moonraker.service.d
+cat > /etc/systemd/system/moonraker.service.d/10-asvc.conf <<EOF
+[Service]
+ExecStartPre=-/usr/bin/find ${ASVC_FILE} -maxdepth 0 -empty -delete
+EOF
+
 popd &> /dev/null || exit 1
 
 ########################################

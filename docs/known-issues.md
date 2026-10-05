@@ -34,6 +34,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B22](#b22) | ~~Media~~ ✅ | Moonraker | `moonraker.conf` sovrascritto da G1-Configs: sezioni G1OS perse, KlipperScreen riavvia Klipper — **risolto in G1-Configs (da unire)** |
 | [B23](#b23) | Bassa | Sistema | Fuso orario `Europe/London` di default |
 | [B24](#b24) | Bassa | Crowsnest | `crowsnest.service` in `failed` sulle stampanti senza camera |
+| [B25](#b25) | ~~Media~~ ✅ | Moonraker | `moonraker.asvc` vuoto → «not permitted to restart service 'crowsnest'» — **risolto** |
 
 ---
 
@@ -287,3 +288,10 @@ G1OS non imposta il fuso orario: resta il default di Raspberry Pi OS (log un'ora
 
 `ERROR: No usable Devices Found. Stopping` a ogni avvio sulle stampanti senza camera (già così su 2.0.5). Innocuo ma sporca `systemctl --failed`.
 - Da decidere: camera sempre montata? Altrimenti lasciare così o disabilitare il servizio di default.
+
+### B25
+**`moonraker.asvc` vuoto** — ✅ Risolto (2026-10-05)
+
+Segnalato dal campo: warning `[update_manager crowsnest]: Moonraker is not permitted to restart service 'crowsnest'`; il workaround era cancellare `~/printer_data/moonraker.asvc` (vuoto) e riavviare. Moonraker scrive la lista di default solo se il file **non esiste**: un file vuoto resta vuoto per sempre. Nessun installer della build (Moonraker, crowsnest v5, sonar, Obico, KlipperScreen, G1-Configs) scrive il file; Moonraker lo crea al primo avvio con `write_text()` senza `fsync`, e uno spegnimento a interruttore subito dopo (ext4, allocazione ritardata) lascia un file da 0 byte. Causa probabile, non confermata.
+- Fix in `51-moonraker`: il file viene creato in build con `moonraker/assets/default_allowed_services` (contiene `crowsnest`, `KlipperScreen`, `sonar`, `moonraker-obico`), e un drop-in `moonraker.service.d/10-asvc.conf` lo cancella prima dell'avvio se è vuoto (Moonraker lo rigenera).
+- Verifica: `: > ~/printer_data/moonraker.asvc && sudo systemctl restart moonraker` → file ripopolato, nessun warning in Mainsail.
