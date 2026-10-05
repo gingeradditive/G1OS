@@ -13,7 +13,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B01](#b01) | ~~Alta~~ — | Build | Repo esterni non bloccati a versione — **non è un bug (scelta voluta)** |
 | [B02](#b02) | ~~Alta~~ ✅ | Moonraker | `update_manager KlipperScreen` punta al repo upstream invece che a klipperscreen4pellet — **risolto** |
 | [B03](#b03) | ~~Alta~~ ✅ | Permessi | `moonraker.conf` e `KAMP_Settings.cfg` copiati da root → non modificabili da Mainsail — **risolto** |
-| [B04](#b04) | Media | Rename utente | Molti path `/home/pi` non vengono corretti da `postrename` |
+| [B04](#b04) | ~~Media~~ ✅ | Rename utente | Molti path `/home/pi` non vengono corretti da `postrename` — **risolto (solo utente `pi`)** |
 | [B05](#b05) | ~~Media~~ ✅ | Rename utente | `postrename` può abortire a metà lasciando i servizi fermi — **risolto da upstream** |
 | [B06](#b06) | ~~Media~~ ✅ | Boot | Splash screen: parametri quiet scritti nel `cmdline.txt` sbagliato — **risolto** |
 | [B07](#b07) | Bassa | Hardware | Pulsante di spegnimento su GPIO3 in conflitto con I2C abilitato — **non si corregge** |
@@ -67,7 +67,9 @@ Moonraker gira come `pi`: Mainsail può leggere ma non salvare questi file (erro
 - Fix: `chown "${BASE_USER}:${BASE_USER}"` dopo i `cp`, oppure `sudo -u "${BASE_USER}" cp …`.
 
 ### B04
-**Path `/home/pi` non gestiti da `postrename`** — Media
+**Path `/home/pi` non gestiti da `postrename`** — ✅ Risolto (2026-10-05): supportato solo l'utente `pi`
+
+> Fix: `mainsailos-prerename` non rinomina più l'utente: se lo user-data di Imager chiede un nome diverso, lo riscrive in `pi` (password, chiavi SSH e sudo del cliente vengono applicati a `pi`, `usermod -p` per l'hash perché cloud-init lo ignora su utenti esistenti). La home resta `/home/pi` e `mainsailos-postrename` è un no-op. Il flusso legacy `INIT_FORMAT=systemd` (non attivo) rinominerebbe ancora l'utente. Verifica su hardware: flash con utente `foo` in Imager → login come `pi` con la password scelta, `journalctl -t mainsailos-prerename`. Descrizione originale:
 
 Se in Raspberry Pi Imager si sceglie un utente diverso da `pi`, la home viene spostata (su Trixie da `mainsailos-prerename`) e `postrename-lib` corregge solo alcuni file (vedi [modules.md](modules.md#postrename-runtime-primo-boot)). Restano rotti:
 

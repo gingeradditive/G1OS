@@ -93,7 +93,7 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 ### Utente e path
 
 - Utente: `pi` (UID 1000) con password **`raspberry`** (`BASE_USER` / `BASE_PASSWORD` in `modules/generic/files/00-config`), impostata in build da `10-config-raspberry` tramite `userconf`; SSH e `getty@tty1` abilitati. Molti file hanno `/home/pi` **scritto a mano** (vedi known-issues).
-- Rinomina utente (Trixie, cloud-init): se in Raspberry Pi Imager si sceglie un altro nome, al primo boot `mainsailos-prerename.service` legge lo user-data di cloud-init e rinomina `pi` (account, gruppo, home); dopo `cloud-final`, `mainsailos-postrename.service` corregge servizi/venv/symlink usando `/usr/local/lib/mainsailos/postrename-lib`, logga in `/var/log/mainsailos-postrename.log` e riavvia. Il vecchio hook `/postrename` via `rc.local` resta solo per `INIT_FORMAT=systemd`.
+- Utente (Trixie, cloud-init): G1OS supporta **solo l'utente `pi`**. Se in Raspberry Pi Imager si sceglie un altro nome, al primo boot `mainsailos-prerename.service` riscrive lo user-data di cloud-init sostituendo quel nome con `pi`: password, chiavi SSH e sudo scelti in Imager vengono applicati a `pi`, la home resta `/home/pi`. `mainsailos-postrename.service` trova quindi `pi` e non fa nulla (le trasformazioni di `postrename-lib` restano solo per il flusso legacy). Il vecchio hook `/postrename` via `rc.local` resta solo per `INIT_FORMAT=systemd`.
 - Hostname di default: `g1os` (da `DIST_NAME` in lowercase) → `http://g1os.local`.
 - Release file: `/etc/g1os-release` → `G1OS release <VERSION> (bookworm)`.
 
@@ -130,7 +130,7 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 | `KlipperScreen.service` | installer KlipperScreen (BACKEND X) | |
 | `moonraker-obico.service` | installer obico | |
 | `headless_nm.service` | `files/headless-nm/` | oneshot al boot: legge `/boot/firmware/headless_nm.txt` |
-| `mainsailos-prerename.service`, `mainsailos-postrename.service` | `files/cloudinit/` | rinomina utente al primo boot (cloud-init), si disabilitano a fine lavoro |
+| `mainsailos-prerename.service`, `mainsailos-postrename.service` | `files/cloudinit/` | mappa l'utente di Imager su `pi` al primo boot (cloud-init), si disabilitano a fine lavoro |
 | `g1-flask.service` | `G1-Configs/install.sh` | server Flask di G1-Configs, gira come root |
 | `splashscreen.service` | generato inline in `63-SplashScreen` | `fbi` su tty1 |
 | `usbstick-handler@.service` | generato inline in `61-EnableUSB` | attivato da regola udev |

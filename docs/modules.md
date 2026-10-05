@@ -58,7 +58,7 @@ Legenda colonna **Pin**: se il repo esterno è bloccato a una versione. `HEAD` =
 
 ### Rinomina utente (runtime, primo boot)
 
-Con `INIT_FORMAT=cloudinit-rpi` (configurazione attuale): `mainsailos-prerename` rinomina `pi` nel nome scelto in Raspberry Pi Imager (letto dallo user-data di cloud-init) e sposta la home; poi `mainsailos-postrename` esegue le trasformazioni di `postrename-lib`, ognuna dentro `run_step` (un errore non blocca le successive). Log: `/var/log/mainsailos-postrename.log`.
+Con `INIT_FORMAT=cloudinit-rpi` (configurazione attuale): G1OS supporta solo l'utente `pi` ([B04](known-issues.md#b04)): `mainsailos-prerename` riscrive lo user-data di cloud-init sostituendo il nome scelto in Raspberry Pi Imager con `pi` (password, chiavi SSH e sudo vengono applicati a `pi`, la home non si sposta). `mainsailos-postrename` trova quindi `pi` come UID 1000 e termina senza fare nulla; le trasformazioni di `postrename-lib` (ognuna dentro `run_step`) restano usate solo dal flusso legacy `INIT_FORMAT=systemd`. Log: `/var/log/mainsailos-postrename.log`.
 
 Le trasformazioni di `postrename-lib`, se l'utente UID 1000 **non** è `pi`:
 

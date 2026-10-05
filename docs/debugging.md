@@ -7,7 +7,7 @@
 | La build CI fallisce | Log della job `build` → gruppo `Running /…/scripts/<modulo> in chroot` (ogni modulo è un gruppo collassabile; con `set -x` si vede il comando fallito) |
 | Problema presente su tutte le unità appena flashate | Moduli in `modules/` e file in `modules/*/files/` |
 | Problema comparso tra due versioni dell'immagine senza cambi in G1OS | Repo esterni non bloccati ([known-issues B01](known-issues.md#b01)): confronta i commit |
-| Solo con utente diverso da `pi` | `postrename` ([B04](known-issues.md#b04), [B05](known-issues.md#b05)) |
+| Solo con utente diverso da `pi` scelto in Imager | l'utente deve risultare `pi` (`mainsailos-prerename`, [B04](known-issues.md#b04)); controllare `/boot/firmware/user-data` e `journalctl -t mainsailos-prerename` |
 | Wi-Fi non si configura | `headless_nm` |
 | Klipper / KlipperScreen / G1-Configs si comportano male a runtime | Quasi sempre bug nel repo esterno (klipper4pellet, klipperscreen4pellet, G1-Configs) |
 
