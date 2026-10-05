@@ -28,6 +28,12 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B16](#b16) | Media | Sicurezza | Credenziali di default `pi`/`raspberry` con SSH attivo — **non si corregge (scelta consapevole)** |
 | [B17](#b17) | ~~Media~~ — | Build | Immagine base `raspios_lite_arm64_latest` non bloccata — **non è un bug (scelta voluta)** |
 | [B18](#b18) | Media | Trixie | Componenti G1 non ancora verificati su Trixie (power button, Obico, KlipperScreen fork) |
+| [B19](#b19) | ~~Alta~~ ✅ | KlipperScreen | I dialoghi di conferma si chiudono da soli in meno di un secondo — **risolto nel fork (da unire)** |
+| [B20](#b20) | ~~Media~~ ✅ | KlipperScreen | Il resoconto di screw adjustment non si apre più — **risolto nel fork (da unire)** |
+| [B21](#b21) | Alta | Wi-Fi | Dal touchscreen non si aggiunge né rimuove una rete (polkit) — da verificare su Trixie |
+| [B22](#b22) | ~~Media~~ ✅ | Moonraker | `moonraker.conf` sovrascritto da G1-Configs: sezioni G1OS perse, KlipperScreen riavvia Klipper — **risolto in G1-Configs (da unire)** |
+| [B23](#b23) | Bassa | Sistema | Fuso orario `Europe/London` di default |
+| [B24](#b24) | Bassa | Crowsnest | `crowsnest.service` in `failed` sulle stampanti senza camera |
 
 ---
 
@@ -43,9 +49,9 @@ Tutti i `git clone` dei moduli `5x`/`6x` prendono `HEAD` del branch di default (
 - Fix: aggiungere `-b <tag>` / `git checkout <sha>` almeno per i repo Ginger (klipper4pellet, klipperscreen4pellet, G1-Configs), magari definendo le versioni in `00-config`. Per bug di regressione tra due versioni dell'immagine, **prima** di cercare nel codice G1OS confrontare i commit dei repo esterni.
 
 ### B02
-**`update_manager KlipperScreen` punta al repo sbagliato** — ✅ Risolto (2026-10-05)
+**`update_manager KlipperScreen` punta al repo sbagliato** — ✅ Risolto in G1OS (2026-10-05), **senza effetto sul dispositivo**
 
-> Fix: `origin` → `gingeradditive/klipperscreen4pellet.git`, `primary_branch: master`, rimosso il commento "Uncomment to enable". Verificato che `scripts/system-dependencies.json` e `scripts/KlipperScreen-requirements.txt` esistono nel fork. Verifica sul dispositivo: KlipperScreen non deve risultare "invalid" nell'Update Manager. Descrizione originale:
+> Il `moonraker.conf` finale è quello di G1-Configs (vedi [B03](#b03)), che sovrascrive la sezione aggiunta da G1OS; lì `origin` è già il fork ma `managed_services = klipper` (dovrebbe essere `KlipperScreen`) e `[update_manager] channel: dev`. Fix in G1OS: `origin` → `gingeradditive/klipperscreen4pellet.git`, `primary_branch: master`, rimosso il commento "Uncomment to enable". Verificato che `scripts/system-dependencies.json` e `scripts/KlipperScreen-requirements.txt` esistono nel fork. Verifica sul dispositivo: KlipperScreen non deve risultare "invalid" nell'Update Manager. Descrizione originale:
 
 `modules/generic/files/moonraker_klipperscreen4pellet.conf:8` → `origin: https://github.com/KlipperScreen/KlipperScreen.git`, ma `~/KlipperScreen` è un clone di `gingeradditive/klipperscreen4pellet`. Moonraker confronta `origin` con il remote reale: il repo viene segnato come **invalid** (aggiornamenti bloccati) oppure, dopo un "recover", verrebbe riallineato all'upstream perdendo le modifiche pellet.
 
@@ -56,7 +62,7 @@ Tutti i `git clone` dei moduli `5x`/`6x` prendono `HEAD` del branch di default (
 ### B03
 **File di config creati da root** — ✅ Risolto (2026-10-05)
 
-> Fix: in `51-moonraker` e `60-Kamp` `cp`/`ln -s` girano con `sudo -u "${BASE_USER}"`. Effetto collaterale scoperto: `G1-Configs/install.sh` (eseguito come `pi`, senza `set -e`) copia il proprio `Configs/moonraker.conf` sopra quello esistente; con il file di root la copia falliva in silenzio e restava il `moonraker.conf` di G1OS. Ora vince quello di G1-Configs. Verifica: `ls -l ~/printer_data/config/` (tutto `pi:pi`) e salvataggio di `moonraker.conf` da Mainsail. Descrizione originale:
+> Fix: in `51-moonraker` e `60-Kamp` `cp`/`ln -s` girano con `sudo -u "${BASE_USER}"`. **Correzione dell'analisi**: per `moonraker.conf` era un falso positivo, perché `install-moonraker.sh` (eseguito come `pi`) crea già il file e il `cp` di root sovrascrive un file esistente mantenendo l'owner `pi`. Per lo stesso motivo `G1-Configs/install.sh` riesce a sovrascriverlo: **sul dispositivo il `moonraker.conf` è quello di `G1-Configs/Configs/moonraker.conf`**, e le sezioni aggiunte da G1OS (`54-timelapse`, `56-klipperscreen4pellet`, `60-Kamp`) vanno perse. Il problema era reale solo per `KAMP_Settings.cfg` (file nuovo, creato da root). Verifica: `ls -l ~/printer_data/config/`. Descrizione originale:
 
 - `modules/generic/51-moonraker:68` → `cp /files/moonraker.conf …/config/moonraker.conf` eseguito da root ⇒ owner `root:root`.
 - `modules/generic/60-Kamp:42` → `cp …/KAMP_Settings.cfg …/config/` da root.
@@ -234,3 +240,50 @@ Checklist su Pi 4 (immagine da `build.yml`):
 8. `udevadm verify /etc/udev/rules.d/*.rules`, `iw wlan0 get power_save` = `off` ([B10](#b10)).
 9. `truncate -s 4096 ~/klipper/klippy/chelper/c_helper.so && sudo systemctl restart klipper` → Klipper riparte ([B12](#b12)).
 10. `headless_nm.txt` con password di 5 caratteri → connessione esistente intatta, errore in `journalctl -t headless_nm` ([B13](#b13)).
+11. Senza sessione SSH aperta: aggiungere e rimuovere una rete Wi-Fi da KlipperScreen ([B21](#b21)).
+12. Disattiva motori da KlipperScreen: il dialogo resta aperto e «Accetta» invia `M18` ([B19](#b19)); `SCREW_ADJUSTMENT` apre il pannello `bed_level` ([B20](#b20)).
+
+---
+
+Le voci B19–B24 vengono dall'analisi sul campo del 2026-10-02 (G1-0096-26, G1OS 2.1.0 Bookworm, confronto con G1-0063-25 su 2.0.5), verificate il 2026-10-05 sull'HEAD dei repo.
+
+### B19
+**Dialoghi di conferma che si chiudono da soli** — ✅ Risolto in `klipperscreen4pellet`, branch `fix/confirm-dialogs-screws-panel` (da unire in `master`)
+
+Il commit upstream `e3dfb677` (13 lug 2026, entrato con il merge `f4923aa6`) chiude le conferme quando `idle_timeout.state` diventa `Printing`. Sulla G1 succede ogni secondo per `[delayed_gcode FEEDER_CHECK_STATUS]` (in ogni `printer.cfg` di G1-Printers), quindi ogni conferma (Disattiva motori, Force Z, `SAVE_CONFIG`) si chiude in < 1 s e il tocco finisce sul pannello sotto.
+- Fix: in `ks_includes/notification_handler.py` le conferme si chiudono solo quando `print_stats.state` diventa `printing`; tolto il `return` che saltava i controlli successivi.
+
+### B20
+**Resoconto di screw adjustment non visualizzato** — ✅ Risolto in `klipperscreen4pellet`, stesso branch di [B19](#b19)
+
+Da upstream `c2187163`/`ce1fbadd` il pannello `bed_level` si apre solo se l'aggiornamento contiene `max_deviation` falso, ma gli aggiornamenti contengono solo i campi cambiati e `max_deviation` (sempre `None`) non arriva mai. Anche il `return` di [B19](#b19) saltava il controllo.
+- Fix: il pannello si apre quando l'aggiornamento porta `results` non vuoti e `max_deviation` (letto dallo stato completo) non è impostato; resta l'intento upstream di non aprirlo con `MAX_DEVIATION=`.
+
+### B21
+**Wi-Fi dal touchscreen: `Insufficient privileges`** — Alta — da verificare su Trixie
+
+Su Bookworm (2.0.5 e 2.1.0): la sessione di KlipperScreen su `tty7` non è mai attiva (Xorg su `tty2`) e `49-polkit-pkla-compat.rules` risponde «no» prima di `KlipperScreen.rules`; funziona solo con una sessione SSH `pi` aperta. Non è una regressione di 2.1.0.
+- Su Trixie la base lite ha `polkitd` senza `polkitd-pkla` e CustoPiZer installa `polkitd` al posto di `policykit-1`: il file `49-polkit-pkla-compat.rules` non dovrebbe esistere e decide `KlipperScreen.rules` (gruppi `network`/`klipperscreen`, indipendente dalla sessione). Verifica: `ls /usr/share/polkit-1/rules.d/ /etc/polkit-1/rules.d/` e punto 11 della checklist di [B18](#b18).
+- Se servisse un fix: regola con nome che preceda `49-` (es. `20-KlipperScreen.rules`) nell'installer del fork.
+- Stampanti Bookworm già consegnate: non correggibili da una nuova immagine.
+
+### B22
+**`moonraker.conf` sovrascritto da G1-Configs** — ✅ Risolto in `G1-Configs`, branch `fix/moonraker-update-manager` (da unire in `main`)
+
+`G1-Configs/install.sh` (`69-G1Config`) copia `Configs/moonraker.conf` sopra quello costruito da G1OS (vedi [B03](#b03)): le sezioni aggiunte da `56-klipperscreen4pellet` e `60-Kamp` vanno perse (quella di `54-timelapse` è commentata). Nella versione G1-Configs `[update_manager KlipperScreen]` aveva `managed_services = klipper` e niente `virtualenv`/`requirements`.
+- Fix in G1-Configs: `managed_services = KlipperScreen`, `virtualenv`/`requirements`/`system_dependencies`, aggiunto `[update_manager Klipper-Adaptive-Meshing-Purging]`.
+- `channel: dev` **resta**: klipper4pellet ha solo i tag upstream (ultimo raggiungibile `v0.13.0`), con `stable` Moonraker riporterebbe Klipper a quel tag perdendo le modifiche pellet. Per usare `stable` bisogna prima taggare le release di klipper4pellet.
+- `install.sh` copia la config solo all'installazione: le stampanti già consegnate non ricevono il fix con l'aggiornamento di G1-Configs.
+- `modules/generic/files/moonraker_klipperscreen4pellet.conf` e `moonraker_kamp.conf` di G1OS restano senza effetto finché G1-Configs sovrascrive il file.
+
+### B23
+**Fuso orario `Europe/London`** — Bassa
+
+G1OS non imposta il fuso orario: resta il default di Raspberry Pi OS (log un'ora indietro rispetto all'Italia), a meno che non lo si scelga in Raspberry Pi Imager.
+- Fix possibile: `timedatectl set-timezone`/`/etc/timezone` in `10-config-raspberry` (decidere il default, le stampanti vanno anche all'estero).
+
+### B24
+**`crowsnest.service` in `failed` senza camera** — Bassa
+
+`ERROR: No usable Devices Found. Stopping` a ogni avvio sulle stampanti senza camera (già così su 2.0.5). Innocuo ma sporca `systemctl --failed`.
+- Da decidere: camera sempre montata? Altrimenti lasciare così o disabilitare il servizio di default.
