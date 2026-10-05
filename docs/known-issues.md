@@ -10,7 +10,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 
 | ID | Sev. | Area | Titolo |
 |---|---|---|---|
-| [B01](#b01) | Alta | Build | Repo esterni non bloccati a versione → immagini non riproducibili |
+| [B01](#b01) | ~~Alta~~ — | Build | Repo esterni non bloccati a versione — **non è un bug (scelta voluta)** |
 | [B02](#b02) | Alta | Moonraker | `update_manager KlipperScreen` punta al repo upstream invece che a klipperscreen4pellet |
 | [B03](#b03) | Alta | Permessi | `moonraker.conf` e `KAMP_Settings.cfg` copiati da root → probabilmente non modificabili da Mainsail |
 | [B04](#b04) | Media | Rename utente | Molti path `/home/pi` non vengono corretti da `postrename` |
@@ -32,7 +32,9 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 ---
 
 ### B01
-**Repo esterni non bloccati a versione** — Alta
+**Repo esterni non bloccati a versione** — **Non è un bug (decisione 2026-10-05)**
+
+> L'immagine viene buildata dalla pipeline solo ai rilasci: prendere `HEAD` dei repo esterni al momento del rilascio è il comportamento voluto. Resta valido il consiglio di debug: per regressioni tra due versioni dell'immagine, confrontare prima i commit dei repo esterni. Descrizione originale:
 
 Tutti i `git clone` dei moduli `5x`/`6x` prendono `HEAD` del branch di default (Mainsail: `releases/latest`). Rebuildare lo stesso commit G1OS in giorni diversi produce immagini diverse; un commit rotto su klipper4pellet / klipperscreen4pellet / G1-Configs / Moonraker finisce direttamente nell'immagine.
 
