@@ -74,16 +74,15 @@ Tutti i moduli usano `set -xe`: **un comando che fallisce interrompe la build** 
 | 12 | `55-sonar` | generic |
 | 13 | `56-klipperscreen4pellet` | generic |
 | 14 | `57-Kiauh` | generic |
-| 15 | `58-Obico` | generic |
-| 16 | `60-Kamp` | generic |
-| 17 | `60-mainsailos` | generic |
-| 18 | `61-EnableUSB` | generic |
-| 19 | `61-postrename` | raspberry (esce subito se `INIT_FORMAT` è `cloudinit*`) |
-| 20 | `61-postrename-cloudinit` | generic (attivo con `INIT_FORMAT=cloudinit-rpi`) |
-| 21 | `62-PowerButton` | generic |
-| 22 | `63-SplashScreen` | raspberry |
-| 23 | `69-G1Config` | generic |
-| 24 | `98-remove-passwordless-sudo` | raspberry |
+| 15 | `60-Kamp` | generic |
+| 16 | `60-mainsailos` | generic |
+| 17 | `61-EnableUSB` | generic |
+| 18 | `61-postrename` | raspberry (esce subito se `INIT_FORMAT` è `cloudinit*`) |
+| 19 | `61-postrename-cloudinit` | generic (attivo con `INIT_FORMAT=cloudinit-rpi`) |
+| 20 | `62-PowerButton` | generic |
+| 21 | `63-SplashScreen` | raspberry |
+| 22 | `69-G1Config` | generic |
+| 23 | `98-remove-passwordless-sudo` | raspberry |
 
 Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, quindi `60-Kamp` < `60-mainsailos`. Le dipendenze implicite contano: ad es. `54-timelapse`, `56-…`, `60-Kamp` appendono a `moonraker.conf` **solo se esiste già** (creato da `51-moonraker`); `62-PowerButton` e gli installer esterni usano `sudo` e funzionano solo perché il passwordless sudo viene rimosso dopo (`98-…`).
 
@@ -105,7 +104,7 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
   mainsail-config/          # mainsail.cfg (macro)
   crowsnest/  sonar/  moonraker-timelapse/
   KlipperScreen/  .KlipperScreen-env/   # clone di gingeradditive/klipperscreen4pellet
-  kiauh/  moonraker-obico/  pi-power-button/
+  kiauh/  pi-power-button/
   Klipper-Adaptive-Meshing-Purging/
   G1-Configs/               # gingeradditive/G1-Configs (config stampante + app Flask, installer proprio)
   printer_data/
@@ -127,7 +126,6 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 | `crowsnest.service` | `make install` di crowsnest | webcam 8080-8083 |
 | `sonar.service` | `make install` di sonar | keepalive Wi-Fi |
 | `KlipperScreen.service` | installer KlipperScreen (BACKEND X) | |
-| `moonraker-obico.service` | installer obico | |
 | `headless_nm.service` | `files/headless-nm/` | oneshot al boot: legge `/boot/firmware/headless_nm.txt` |
 | `mainsailos-prerename.service`, `mainsailos-postrename.service` | `files/cloudinit/` | mappa l'utente di Imager su `pi` al primo boot (cloud-init), si disabilitano a fine lavoro |
 | `g1-flask.service` | `G1-Configs/install.sh` | server Flask di G1-Configs, gira come root |

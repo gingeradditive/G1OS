@@ -38,9 +38,8 @@ Legenda colonna **Pin**: se il repo esterno è bloccato a una versione. `HEAD` =
 | `55-sonar` | clona sonar (`main`), `make install` unattended | mainsail-crew/sonar | branch main |
 | `56-klipperscreen4pellet` | clona **klipperscreen4pellet** in `~/KlipperScreen`, esegue `KlipperScreen-install.sh` (BACKEND=X, SERVICE=Y, START=0, NETWORK=Y), appende `update_manager KlipperScreen` | gingeradditive/klipperscreen4pellet | HEAD |
 | `57-Kiauh` | clona kiauh (solo clone, nessuna installazione) | dw-0/kiauh | HEAD |
-| `58-Obico` | clona moonraker-obico, `yes "" \| ./install.sh -L -U` | TheSpaghettiDetective/moonraker-obico | HEAD |
 | `60-Kamp` | clona KAMP, symlink `config/KAMP`, copia `KAMP_Settings.cfg`, appende update_manager | kyleisah/Klipper-Adaptive-Meshing-Purging | HEAD |
-| `60-mainsailos` | crea `/etc/g1os-release`, hostname `g1os`, installa `python3-serial`, `python3-opencv` | — | — |
+| `60-mainsailos` | crea `/etc/g1os-release`, hostname `g1os`, installa `python3-serial` | — | — |
 | `61-postrename-cloudinit` | solo se `EDITBASE_INIT_FORMAT` è `cloudinit*`: installa `cloud-init`, `python3-yaml`, gli script `mainsailos-prerename`/`-postrename` e la lib condivisa, abilita le due unit | — | — |
 | `61-EnableUSB` | `pmount`, symlink `gcodes/media → /media`, regola udev `usbstick.rules` + unit `usbstick-handler@.service` (monta in sola lettura) | — | — |
 | `62-PowerButton` | clona pi-power-button, esegue `./script/install` (servizio init.d su GPIO3) | Howchoo/pi-power-button | HEAD |

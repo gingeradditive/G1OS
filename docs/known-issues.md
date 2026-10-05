@@ -27,7 +27,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B15](#b15) | Bassa | Varie | Residui MainsailOS (link, patch, branding, variabili inesistenti) — **in gran parte risolto** |
 | [B16](#b16) | Media | Sicurezza | Credenziali di default `pi`/`raspberry` con SSH attivo — **non si corregge (scelta consapevole)** |
 | [B17](#b17) | ~~Media~~ — | Build | Immagine base `raspios_lite_arm64_latest` non bloccata — **non è un bug (scelta voluta)** |
-| [B18](#b18) | Media | Trixie | Componenti G1 non ancora verificati su Trixie (power button, Obico, KlipperScreen fork) |
+| [B18](#b18) | Media | Trixie | Componenti G1 non ancora verificati su Trixie (power button, KlipperScreen fork) |
 | [B19](#b19) | ~~Alta~~ ✅ | KlipperScreen | I dialoghi di conferma si chiudono da soli in meno di un secondo — **risolto nel fork (da unire)** |
 | [B20](#b20) | ~~Media~~ ✅ | KlipperScreen | Il resoconto di screw adjustment non si apre più — **risolto nel fork (da unire)** |
 | [B21](#b21) | Alta | Wi-Fi | Dal touchscreen non si aggiunge né rimuove una rete (polkit) — da verificare su Trixie |
@@ -84,7 +84,6 @@ Se in Raspberry Pi Imager si sceglie un utente diverso da `pi`, la home viene sp
 |---|---|
 | symlink assoluto `config/KAMP → /home/pi/Klipper-Adaptive-Meshing-Purging/Configuration` | `60-Kamp:41` |
 | `splashscreen.service` → `/home/pi/printer_data/config/splash.png` | `63-SplashScreen:32` |
-| `moonraker-obico.service` + venv + `moonraker-obico.cfg` | `58-Obico` (non in `SERVICES`) |
 | `g1-flask.service` (`/home/pi/G1-Configs/Flask`), tema Mainsail in `/home/pi/printer_data/config/.theme`, `chown pi:pi` | `G1-Configs/install.sh` (path scritti a mano) |
 | pi-power-button | `62-PowerButton` |
 | `usbstick-handler`, symlink `gcodes/media` | ok (path assoluto `/media`) |
@@ -227,7 +226,7 @@ Da `426a216` (Trixie non ha più un utente preconfigurato): `BASE_PASSWORD=raspb
 Verificato in modo statico (2026-10-05): tutti i pacchetti apt dei moduli G1 esistono in Trixie; i requirements di klipper4pellet hanno già pin per Python ≥ 3.12; la build CI su Trixie (`build.yml`) completa tutti i moduli.
 - `62-PowerButton`: l'immagine base Trixie lite (2026-09-15) include `python-is-python3` (lo shebang `#!/usr/bin/env python` funziona) e `python3-rpi-lgpio` (shim `RPi.GPIO`). Lo script init.d gira tramite il generatore SysV di systemd 257 (deprecato: si romperà con systemd ≥ 258 / Debian Forky). Da verificare a runtime: `wait_for_edge` con rpi-lgpio.
 - `56-klipperscreen4pellet`: `PyGObject<3.51` compila su Python 3.13 (deps di build in `system-dependencies.json`, CI verde).
-- `58-Obico`: installer esterno, avvio con Python 3.13 non verificato.
+- `58-Obico`: modulo rimosso (2026-10-05), Obico non è usato sulla G1.
 - `G1-Configs/install.sh`: `sudo pip3 install flask` fallisce per PEP 668 (innocuo: Flask arriva da apt in `69-G1Config`).
 
 Checklist su Pi 4 (immagine da `build.yml`):
@@ -236,7 +235,7 @@ Checklist su Pi 4 (immagine da `build.yml`):
 3. `ls -l ~/printer_data/config/` tutto `pi:pi`; salvataggio di `moonraker.conf` da Mainsail ([B03](#b03)).
 4. Update Manager: KlipperScreen non "invalid" ([B02](#b02)).
 5. Pulsante di spegnimento: `systemctl status listen-for-shutdown`, pressione → shutdown.
-6. `systemctl status moonraker-obico`.
+6. `ls ~` non contiene `moonraker-obico` (modulo rimosso).
 7. Chiavetta senza tabella partizioni → file in `gcodes/media` ([B08](#b08)).
 8. `udevadm verify /etc/udev/rules.d/*.rules`, `iw wlan0 get power_save` = `off` ([B10](#b10)).
 9. `truncate -s 4096 ~/klipper/klippy/chelper/c_helper.so && sudo systemctl restart klipper` → Klipper riparte ([B12](#b12)).
@@ -292,6 +291,6 @@ G1OS non imposta il fuso orario: resta il default di Raspberry Pi OS (log un'ora
 ### B25
 **`moonraker.asvc` vuoto** — ✅ Risolto (2026-10-05)
 
-Segnalato dal campo: warning `[update_manager crowsnest]: Moonraker is not permitted to restart service 'crowsnest'`; il workaround era cancellare `~/printer_data/moonraker.asvc` (vuoto) e riavviare. Moonraker scrive la lista di default solo se il file **non esiste**: un file vuoto resta vuoto per sempre. Nessun installer della build (Moonraker, crowsnest v5, sonar, Obico, KlipperScreen, G1-Configs) scrive il file; Moonraker lo crea al primo avvio con `write_text()` senza `fsync`, e uno spegnimento a interruttore subito dopo (ext4, allocazione ritardata) lascia un file da 0 byte. Causa probabile, non confermata.
+Segnalato dal campo: warning `[update_manager crowsnest]: Moonraker is not permitted to restart service 'crowsnest'`; il workaround era cancellare `~/printer_data/moonraker.asvc` (vuoto) e riavviare. Moonraker scrive la lista di default solo se il file **non esiste**: un file vuoto resta vuoto per sempre. Nessun installer della build (Moonraker, crowsnest v5, sonar, KlipperScreen, G1-Configs) scrive il file; Moonraker lo crea al primo avvio con `write_text()` senza `fsync`, e uno spegnimento a interruttore subito dopo (ext4, allocazione ritardata) lascia un file da 0 byte. Causa probabile, non confermata.
 - Fix in `51-moonraker`: il file viene creato in build con `moonraker/assets/default_allowed_services` (contiene `crowsnest`, `KlipperScreen`, `sonar`, `moonraker-obico`), e un drop-in `moonraker.service.d/10-asvc.conf` lo cancella prima dell'avvio se è vuoto (Moonraker lo rigenera).
 - Verifica: `: > ~/printer_data/moonraker.asvc && sudo systemctl restart moonraker` → file ripopolato, nessun warning in Mainsail.

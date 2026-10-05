@@ -21,7 +21,7 @@ cat /etc/g1os-release
 
 # Stato servizi
 systemctl --failed
-systemctl status klipper moonraker nginx crowsnest sonar KlipperScreen moonraker-obico headless_nm splashscreen
+systemctl status klipper moonraker nginx crowsnest sonar KlipperScreen headless_nm splashscreen
 
 # Log applicativi
 tail -n 200 ~/printer_data/logs/klippy.log
@@ -30,7 +30,7 @@ journalctl -u klipper -u moonraker -b --no-pager | tail -n 200
 
 # Commit effettivi dei repo esterni inclusi nell'immagine
 for d in klipper moonraker KlipperScreen G1-Configs mainsail-config crowsnest sonar \
-         moonraker-timelapse moonraker-obico Klipper-Adaptive-Meshing-Purging kiauh pi-power-button; do
+         moonraker-timelapse Klipper-Adaptive-Meshing-Purging kiauh pi-power-button; do
   printf '%-36s ' "$d"; git -C ~/$d log -1 --format='%h %ad %s' --date=short 2>/dev/null || echo '-'
 done
 
