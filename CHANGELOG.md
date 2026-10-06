@@ -2,6 +2,15 @@
 # Changelog
 All notable changes to G1OS will be documented in this file.
 
+## [3.0.1](https://github.com/gingeradditive/G1OS/releases/tag/3.0.1) - 2026-10-06
+### Bug Fixes and Improvements
+
+- **cloudinit**: Keep build-time groups of pi when user-data sets groups
+
+### Other
+
+- Bump version to v3.0.1
+
 ## [3.0.0](https://github.com/gingeradditive/G1OS/releases/tag/3.0.0) - 2026-10-05
 ### Features
 
