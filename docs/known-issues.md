@@ -30,7 +30,7 @@ Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non*
 | [B18](#b18) | Media | Trixie | Componenti G1 non ancora verificati su Trixie (power button, KlipperScreen fork) |
 | [B19](#b19) | ~~Alta~~ ✅ | KlipperScreen | I dialoghi di conferma si chiudono da soli in meno di un secondo — **risolto nel fork (da unire)** |
 | [B20](#b20) | ~~Media~~ ✅ | KlipperScreen | Il resoconto di screw adjustment non si apre più — **risolto nel fork (da unire)** |
-| [B21](#b21) | Alta | Wi-Fi | Dal touchscreen non si aggiunge né rimuove una rete (polkit) — da verificare su Trixie |
+| [B21](#b21) | ~~Alta~~ ✅ | Wi-Fi | Dal touchscreen non si aggiunge né rimuove una rete (polkit) — **risolto su Trixie** (Bookworm: no) |
 | [B22](#b22) | ~~Media~~ ✅ | Moonraker | `moonraker.conf` sovrascritto da G1-Configs: sezioni G1OS perse, KlipperScreen riavvia Klipper — **risolto in G1-Configs (da unire)** |
 | [B23](#b23) | Bassa | Sistema | Fuso orario `Europe/London` di default |
 | [B24](#b24) | Bassa | Crowsnest | `crowsnest.service` in `failed` sulle stampanti senza camera |
@@ -261,12 +261,14 @@ Da upstream `c2187163`/`ce1fbadd` il pannello `bed_level` si apre solo se l'aggi
 - Fix: il pannello si apre quando l'aggiornamento porta `results` non vuoti e `max_deviation` (letto dallo stato completo) non è impostato; resta l'intento upstream di non aprirlo con `MAX_DEVIATION=`.
 
 ### B21
-**Wi-Fi dal touchscreen: `Insufficient privileges`** — Alta — da verificare su Trixie
+**Wi-Fi dal touchscreen: `Insufficient privileges`** — ✅ Risolto su Trixie (2026-10-06)
 
-Su Bookworm (2.0.5 e 2.1.0): la sessione di KlipperScreen su `tty7` non è mai attiva (Xorg su `tty2`) e `49-polkit-pkla-compat.rules` risponde «no» prima di `KlipperScreen.rules`; funziona solo con una sessione SSH `pi` aperta. Non è una regressione di 2.1.0.
-- Su Trixie la base lite ha `polkitd` senza `polkitd-pkla` e CustoPiZer installa `polkitd` al posto di `policykit-1`: il file `49-polkit-pkla-compat.rules` non dovrebbe esistere e decide `KlipperScreen.rules` (gruppi `network`/`klipperscreen`, indipendente dalla sessione). Verifica: `ls /usr/share/polkit-1/rules.d/ /etc/polkit-1/rules.d/` e punto 11 della checklist di [B18](#b18).
-- Se servisse un fix: regola con nome che preceda `49-` (es. `20-KlipperScreen.rules`) nell'installer del fork.
-- Stampanti Bookworm già consegnate: non correggibili da una nuova immagine.
+`KlipperScreen.rules` concede le azioni NetworkManager ai gruppi `network`/`klipperscreen` (l'installer di klipperscreen4pellet ci aggiunge `pi` in build). La regola di default di NetworkManager (`sudo`/`netdev`) richiede invece una sessione locale attiva, e quella di KlipperScreen su `tty7` non lo è.
+- Causa (verificata su G1OS 3.0.0 Trixie, 2026-10-06): con la personalizzazione di Raspberry Pi Imager, cloud-init esegue `usermod -G <groups di user-data> pi`, che **sostituisce** i gruppi secondari. `pi` perde `network`, `klipperscreen` e `tty` (i gruppi esistono ma sono vuoti), quindi «Dimentica rete» e l'interruttore Wi-Fi falliscono (`NmSettingsPermissionDeniedError` / `Not authorized` in `KlipperScreen.log`). Senza personalizzazione i gruppi restano.
+- Fix: `files/cloudinit/prerename` (prima di cloud-init) aggiunge al campo `groups:` di `user-data` i gruppi che `pi` ha nell'immagine (`keep_build_groups`).
+- Verifica: immagine scritta con Imager e personalizzazione → `id pi` contiene `network klipperscreen tty`, `journalctl -t mainsailos-prerename` mostra «kept build groups»; da KlipperScreen si rimuove una rete.
+- Stampanti già installate: `sudo usermod -aG network,klipperscreen,tty pi && sudo reboot`.
+- Bookworm (2.0.5, 2.1.0): causa diversa, `49-polkit-pkla-compat.rules` risponde «no» prima di `KlipperScreen.rules`; funziona solo con una sessione SSH `pi` aperta. Stampanti già consegnate: non correggibili da una nuova immagine.
 
 ### B22
 **`moonraker.conf` sovrascritto da G1-Configs** — ✅ Risolto in `G1-Configs`, branch `fix/moonraker-update-manager` (da unire in `main`)
