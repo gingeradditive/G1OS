@@ -1,6 +1,6 @@
 # Problemi noti e punti fragili
 
-Risultato di un'analisi statica del codice (2026-10-05, versione 2.0.10). **Non** sono stati verificati su un dispositivo: ogni voce indica come confermarla. Severità:
+Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2.0.10). Le voci sono nate senza verifica su dispositivo e ognuna indica come confermarla; la versione 3.0.1, che contiene le correzioni segnate come risolte, è stata poi provata su hardware e risulta funzionante (2026-10-12). Severità:
 
 - **Alta**: l'utente finale vede un malfunzionamento.
 - **Media**: malfunzionamento in condizioni specifiche (utente rinominato, hardware specifico, ecc.).

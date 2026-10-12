@@ -24,7 +24,7 @@ cliff.toml, cliff-release.toml   # Config git-cliff per CHANGELOG
 push develop / PR / workflow_dispatch
         │
         ▼
-generate-matrix  ── legge config.yml → una job per ogni voce (oggi: raspberry_pi-arm64-bookworm)
+generate-matrix  ── legge config.yml → una job per ogni voce (oggi: raspberry_pi-arm64-trixie)
         │
         ▼
 build (runner ubuntu-24.04-arm)
@@ -92,7 +92,7 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 - Utente: `pi` (UID 1000) con password **`raspberry`** (`BASE_USER` / `BASE_PASSWORD` in `modules/generic/files/00-config`), impostata in build da `10-config-raspberry` tramite `userconf`; SSH e `getty@tty1` abilitati. Molti file hanno `/home/pi` **scritto a mano** (vedi known-issues).
 - Utente (Trixie, cloud-init): G1OS supporta **solo l'utente `pi`**. Se in Raspberry Pi Imager si sceglie un altro nome, al primo boot `mainsailos-prerename.service` riscrive lo user-data di cloud-init sostituendo quel nome con `pi`: password, chiavi SSH e sudo scelti in Imager vengono applicati a `pi`, la home resta `/home/pi`. `mainsailos-postrename.service` trova quindi `pi` e non fa nulla (le trasformazioni di `postrename-lib` restano solo per il flusso legacy). Il vecchio hook `/postrename` via `rc.local` resta solo per `INIT_FORMAT=systemd`.
 - Hostname di default: `g1os` (da `DIST_NAME` in lowercase) → `http://g1os.local`.
-- Release file: `/etc/g1os-release` → `G1OS release <VERSION> (bookworm)`.
+- Release file: `/etc/g1os-release` → `G1OS release <VERSION> (trixie)`.
 
 ```
 /home/pi/
