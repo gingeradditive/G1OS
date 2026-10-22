@@ -128,7 +128,7 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 | `KlipperScreen.service` | installer KlipperScreen (BACKEND X) | |
 | `headless_nm.service` | `files/headless-nm/` | oneshot al boot: legge `/boot/firmware/headless_nm.txt` |
 | `mainsailos-prerename.service`, `mainsailos-postrename.service` | `files/cloudinit/` | mappa l'utente di Imager su `pi` al primo boot (cloud-init), si disabilitano a fine lavoro |
-| `g1-flask.service` | `G1-Configs/install.sh` | server Flask di G1-Configs, gira come root |
+| `g1-flask.service` (alias `GingerConfigs.service`) | `G1-Configs/install.sh` | server Flask di G1-Configs, gira come `pi`; Moonraker lo riavvia dopo gli aggiornamenti di GingerConfigs ([B34](known-issues.md#b34)) |
 | `splashscreen.service` | generato inline in `63-SplashScreen` | `fbi` su tty1 |
 | `usbstick-handler@.service` | generato inline in `61-EnableUSB` | attivato da regola udev |
 | `systemd-networkd` | abilitato da `32-canbus` | interfacce `can*` a 1 Mbit |

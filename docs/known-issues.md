@@ -36,11 +36,14 @@ Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2
 | [B24](#b24) | Bassa | Crowsnest | `crowsnest.service` in `failed` sulle stampanti senza camera |
 | [B25](#b25) | ~~Media~~ ✅ | Moonraker | `moonraker.asvc` vuoto → «not permitted to restart service 'crowsnest'» — **risolto** |
 | [B26](#b26) | ~~Alta~~ ✅ | Crowsnest | Moonraker si aspetta crowsnest su `master` (v4): il Recover installa la v4 e il servizio non parte — **risolto** (G1-Printers: vedi B30) |
-| [B27](#b27) | ~~Alta~~ ✅ | G1-Configs | g1-flask gira come root e lascia `__pycache__` di root nel repo: il Recover di GingerConfigs si blocca a metà — **risolto in G1-Configs (da unire)** |
-| [B28](#b28) | ~~Alta~~ ✅ | KlipperScreen | `KlipperScreen.conf` linkato al repo: le preferenze del display lo sporcano, e al primo avvio KlipperScreen parte con i default — **risolto in G1-Configs (da unire)** |
-| [B29](#b29) | ~~Media~~ ✅ | G1-Configs | I link del menu Mainsail contengono l'IP: dopo un cambio di rete o senza rete (`127.0.0.1`) non funzionano — **risolto (da unire)** |
+| [B27](#b27) | ~~Alta~~ ✅ | G1-Configs | g1-flask gira come root e lascia `__pycache__` di root nel repo: il Recover di GingerConfigs si blocca a metà — **risolto** (verificato su G1-9999-25) |
+| [B28](#b28) | ~~Alta~~ ✅ | KlipperScreen | `KlipperScreen.conf` linkato al repo: le preferenze del display lo sporcano, e al primo avvio KlipperScreen parte con i default — **risolto** (verificato su G1-9999-25) |
+| [B29](#b29) | ~~Media~~ ✅ | G1-Configs | I link del menu Mainsail contengono l'IP: dopo un cambio di rete o senza rete (`127.0.0.1`) non funzionano — **risolto** (verificato su G1-9999-25) |
 | [B30](#b30) | Alta | G1-Printers | Il `moonraker.conf` di G1-Printers sostituisce quello dell'immagine al primo UPDATE G1: le correzioni del template si perdono — **in corso (cartelle da convertire una alla volta)** |
-| [B31](#b31) | ~~Media~~ ✅ | G1-Configs | `socket.setdefaulttimeout(3)` in g1-flask: le chiamate a GitHub si interrompono dopo 3 s e il menu dice «tutto aggiornato» — **risolto in G1-Configs (da unire)** |
+| [B31](#b31) | ~~Media~~ ✅ | G1-Configs | `socket.setdefaulttimeout(3)` in g1-flask: le chiamate a GitHub si interrompono dopo 3 s e il menu dice «tutto aggiornato» — **risolto** (verificato su G1-9999-25) |
+| [B32](#b32) | ~~Bassa~~ ✅ | G1-Configs | «by Ginger Additive» compare due volte nel menu di Mainsail — **risolto** (verificato su G1-9999-25) |
+| [B33](#b33) | ~~Alta~~ ✅ | G1-Configs | UPDATE G1 scarica la versione vecchia di un file appena modificato in G1-Printers (cache di raw.githubusercontent.com) — **risolto** (verificato su G1-9999-25) |
+| [B34](#b34) | ~~Media~~ ✅ | G1-Configs | g1-flask non viene riavviato dopo un aggiornamento o un Recover di GingerConfigs: dopo il Recover la pagina INIT dà errore 500 — **risolto** (verificato su G1-9999-25) |
 
 ---
 
@@ -315,14 +318,14 @@ Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1): già al primo avvio Ma
 - Verifica: `git -C ~/crowsnest branch --show-current` → `v5`; nessun avviso crowsnest in Mainsail; Recover su crowsnest → resta su `v5` e il servizio riparte (senza camera si ferma per [B24](#b24)).
 
 ### B27
-**g1-flask come root: il Recover di GingerConfigs si blocca su `__pycache__`** — ✅ Risolto in G1-Configs (2026-10-22, da unire)
+**g1-flask come root: il Recover di GingerConfigs si blocca su `__pycache__`** — ✅ Risolto in G1-Configs (2026-10-22, verificato su G1-9999-25)
 
 Segnalato dal campo (G1OS 3.0.1): `Error Recovering GingerConfigs: [Errno 13] Permission denied: '/home/pi/G1-Configs/Flask/scripts/__pycache__'`. `install.sh` di G1-Configs creava `g1-flask.service` con `User=root`, quindi Python scriveva `Flask/scripts/__pycache__` e `Flask/utils/__pycache__` di root accanto ai sorgenti. Un update normale (`git pull`) non le tocca, perché sono nel `.gitignore`. Il Recover invece cancella tutta `~/G1-Configs` come `pi`: si ferma su quelle cartelle e lascia il repo con file mancanti (`Repo validation check failed`), e ogni Recover successivo fallisce. Le cartelle nascono quando la macchina è accesa, non durante la build (in chroot g1-flask non parte).
 - Fix in G1-Configs: il servizio gira come `pi` con `SupplementaryGroups=moonraker-admin`, gruppo richiesto dalla regola polkit di Moonraker per `systemctl restart klipper` (UPDATE G1). `/etc/polkit-1/rules.d/g1-flask.rules` permette a `pi` solo `org.freedesktop.timedate1.set-timezone`, e `init_script.py` chiama `timedatectl` senza `sudo`, che su G1OS chiede la password (`98-remove-passwordless-sudo`).
 - Verifica: `systemctl show -p User g1-flask` → `pi`; `find ~/G1-Configs ~/printer_data -user root` vuoto; INIT con un fuso diverso → `timedatectl` aggiornato; UPDATE G1 riavvia Klipper; Recover di GingerConfigs completato.
 
 ### B28
-**`KlipperScreen.conf` linkato al repo G1-Configs** — ✅ Risolto in G1-Configs (2026-10-22, da unire)
+**`KlipperScreen.conf` linkato al repo G1-Configs** — ✅ Risolto in G1-Configs (2026-10-22, verificato su G1-9999-25)
 
 Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1). `server.py` di g1-flask, a ogni avvio, sostituiva `printer_data/config/KlipperScreen.conf` con un link al file tracciato `G1-Configs/Configs/G1-Configs/KlipperScreen.conf`. Due effetti:
 - KlipperScreen salva le preferenze del display (sezione `#~#`) nel file che legge, quindi nel repo: G1-Configs risulta modificato e Mainsail propone il Recover (vedi [B27](#b27)). Le righe `#~# [graph …]` le scrive solo un tocco sui sensori del grafico (`toggle_visibility`).
@@ -332,7 +335,7 @@ Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1). `server.py` di g1-flas
 - Verifica: al primo avvio il display ha il tema Ginger; nel log di KlipperScreen `Config path location: /home/pi/printer_data/config/KlipperScreen.conf`; dopo aver nascosto un sensore nel grafico `git -C ~/G1-Configs status` resta pulito.
 
 ### B29
-**Link del menu Mainsail con l'IP della stampante** — ✅ Risolto (2026-10-22, da unire in G1OS e G1-Configs)
+**Link del menu Mainsail con l'IP della stampante** — ✅ Risolto (2026-10-22, verificato su G1-9999-25)
 
 Segnalato dal campo (G1-0038-25, G1OS 3.0.1). `mainsail_menu.py` di G1-Configs scriveva in `.theme/navi.json` link come `http://<ip>:5000/checkforupdate`, con l'IP calcolato da `get_machine_ip()` all'avvio e poi una volta all'ora. Dopo un cambio di rete il link restava sull'IP vecchio fino a un'ora; senza rete `get_machine_ip()` ripiega su `127.0.0.1`, e su G1-0038-25 il link è rimasto `http://127.0.0.1:5000/checkforupdate`, inutilizzabile da un PC. All'avvio `server.py` aspetta internet, quindi il `127.0.0.1` arriva dal controllo orario o da una richiesta fatta mentre la stampante era senza rete. Un `href` "stesso host, porta 5000" non si può scrivere senza indicare l'host.
 - Fix in G1OS: il sito nginx `mainsail` inoltra `/g1/` a `127.0.0.1:5000` (con `X-Forwarded-Prefix: /g1` e `proxy_read_timeout 300s`, perché `checkforupdate` e `update` interrogano GitHub file per file); `52-mainsail` esegue `nginx -t`, così un errore di sintassi fa fallire la build invece di lasciare la stampante senza Mainsail.
@@ -350,8 +353,31 @@ Segnalato dal campo (G1-0038-25, G1OS 3.0.1). Ogni cartella di G1-Printers (`G1-
 - Verifica, dopo il reflash e la conversione: UPDATE G1 completato, Mainsail collegato, nessun avviso su crowsnest, sezioni KlipperScreen e KAMP presenti nel `moonraker.conf` della stampante.
 
 ### B31
-**Timeout di 3 secondi su tutte le connessioni di g1-flask** — ✅ Risolto in G1-Configs (2026-10-22, da unire)
+**Timeout di 3 secondi su tutte le connessioni di g1-flask** — ✅ Risolto in G1-Configs (2026-10-22, verificato su G1-9999-25)
 
 `is_internet_available()` in `Flask/server.py` chiamava `socket.setdefaulttimeout(3)` prima di avviare l'app, quindi ogni connessione del processo senza un timeout esplicito si interrompeva dopo 3 secondi, comprese le chiamate a GitHub di `checkforupdate_script.py` (elenco dei file della cartella, un commit per file) e `update_script.py` (download). Con GitHub lento la prima chiamata falliva, lo script restituiva `""` e il menu mostrava «tutto aggiornato» anche con aggiornamenti disponibili. Il socket del test non veniva chiuso.
 - Fix in G1-Configs: `socket.create_connection((host, port), timeout=timeout)` dentro un `with`, e `timeout=30` esplicito sulle tre chiamate a GitHub (senza il timeout globale sarebbero rimaste senza limite). Le chiamate a Moonraker su `localhost` avevano già `timeout=5`.
 - Verifica: dopo un commit nella cartella della stampante in G1-Printers, `/checkforupdate` mostra UPDATE G1 nel menu; `journalctl -u g1-flask` non riporta timeout verso `api.github.com`.
+
+### B32
+**«by Ginger Additive» due volte nel menu di Mainsail** — ✅ Risolto in G1-Configs (2026-10-22, verificato su G1-9999-25)
+
+Visto in collaudo sulla G1-9999-25 (build `develop` aca0795): al primo caricamento di Mainsail la voce «by Ginger Additive» compariva due volte, e un ricaricamento la riportava a una. Mainsail rilegge `.theme/navi.json` a ogni modifica del file e aggiunge le voci al menu con fetch asincroni non coordinati (`navigation.ts`): due letture ravvicinate duplicano le voci. All'avvio g1-flask scriveva il file due volte di fila (controllo iniziale in `__main__` e primo giro di `periodic_check`), e lo riscriveva a ogni controllo anche senza cambiamenti.
+- Fix in G1-Configs (`8b8fa19`): `UpdateMainsailMenu` scrive `navi.json` solo se il contenuto cambia, e `periodic_check` attende un'ora prima del primo controllo. Resta la race di Mainsail quando il file cambia davvero (es. comparsa di UPDATE G1 con Mainsail aperto): un ricaricamento sistema il menu.
+- Verifica: `stat -c %y ~/printer_data/config/.theme/navi.json` non cambia dopo `sudo systemctl restart g1-flask` se lo stato degli aggiornamenti è lo stesso; nel menu una sola voce «by Ginger Additive».
+
+### B33
+**UPDATE G1 scarica la versione vecchia di un file appena modificato** — ✅ Risolto in G1-Configs (2026-10-22, verificato su G1-9999-25)
+
+Visto in collaudo sulla G1-9999-25: dopo un push su `G1-9999-25/printer.cfg` in G1-Printers, UPDATE G1 ha scaricato il `printer.cfg` precedente (Klipper: `Option 'step_pin' in section 'extruder' must be specified`) e ha salvato in `G1.Conf` lo SHA nuovo, quindi il controllo successivo non proponeva più l'aggiornamento. `checkforupdate_script.py` legge lo SHA dall'API di GitHub (aggiornata subito), mentre `update_script.py` scaricava da `raw.githubusercontent.com/.../main/...`, che ha una cache di 5 minuti (`max-age=300`).
+- Fix in G1-Configs (`6e0e6c9`): `update_script.py` scarica ogni file al commit salvato in `G1.Conf` (`raw.githubusercontent.com/<repo>/<sha>/<seriale>/<file>`), quindi file e SHA coincidono sempre.
+- Sbloccare una stampante con il file sbagliato: togliere la riga del file da `~/printer_data/database/G1.Conf`, `sudo systemctl restart g1-flask`, poi UPDATE G1.
+- Verifica: commit in G1-Printers e UPDATE G1 entro un minuto; il file sulla stampante è quello del commit.
+
+### B34
+**g1-flask non viene riavviato dopo un aggiornamento o un Recover di GingerConfigs** — ✅ Risolto in G1-Configs (2026-10-22, verificato su G1-9999-25)
+
+Visto in collaudo sulla G1-9999-25: dopo un Recover di GingerConfigs `/g1/init` rispondeva 500, perché il Recover ricrea `~/G1-Configs` e il processo di g1-flask restava nella cartella cancellata. Anche dopo un normale aggiornamento g1-flask continuava a girare col codice vecchio. `[update_manager GingerConfigs]` aveva `managed_services = klipper`, e Moonraker accetta solo il nome della sezione, `klipper` e `moonraker`; il nome della sezione deve anche comparire in `moonraker.asvc`, altrimenti Moonraker mostra un avviso e svuota tutta la lista, klipper compreso.
+- Fix in G1-Configs (`cbe016c`): `g1-flask.service` ha `Alias=GingerConfigs.service` (Moonraker riavvia via D-Bus `GingerConfigs.service`, che systemd risolve sull'alias), `install.sh` aggiunge `GingerConfigs` a `~/printer_data/moonraker.asvc` (già creato da `51-moonraker`, vedi [B25](#b25)) e usa `systemctl reenable` per creare l'alias, e il template ha `managed_services = klipper GingerConfigs`.
+- G1-Printers (`0be6db8`): `G1-TEMPLATE` e `G1-9999-25` hanno il nuovo `managed_services`; le altre cartelle restano come sono fino al reflash, come per [B30](#b30) (su un'immagine vecchia il nome `GingerConfigs` genera l'avviso e toglie anche il riavvio di klipper). `MOONRAKER.md` descrive la seconda differenza tra i formati.
+- Verifica: `systemctl cat GingerConfigs.service` mostra `g1-flask.service`; nessun avviso nell'Update Manager; dopo un Recover o un aggiornamento di GingerConfigs `systemctl show -p ActiveEnterTimestamp g1-flask` è cambiato e `http://<host>/g1/init` risponde.
