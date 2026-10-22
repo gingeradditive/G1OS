@@ -35,10 +35,11 @@ Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2
 | [B23](#b23) | Bassa | Sistema | Fuso orario `Europe/London` di default |
 | [B24](#b24) | Bassa | Crowsnest | `crowsnest.service` in `failed` sulle stampanti senza camera |
 | [B25](#b25) | ~~Media~~ ✅ | Moonraker | `moonraker.asvc` vuoto → «not permitted to restart service 'crowsnest'» — **risolto** |
-| [B26](#b26) | ~~Alta~~ ✅ | Crowsnest | Moonraker si aspetta crowsnest su `master` (v4): il Recover installa la v4 e il servizio non parte — **risolto (G1-Printers da allineare)** |
+| [B26](#b26) | ~~Alta~~ ✅ | Crowsnest | Moonraker si aspetta crowsnest su `master` (v4): il Recover installa la v4 e il servizio non parte — **risolto** (G1-Printers: vedi B30) |
 | [B27](#b27) | ~~Alta~~ ✅ | G1-Configs | g1-flask gira come root e lascia `__pycache__` di root nel repo: il Recover di GingerConfigs si blocca a metà — **risolto in G1-Configs (da unire)** |
 | [B28](#b28) | ~~Alta~~ ✅ | KlipperScreen | `KlipperScreen.conf` linkato al repo: le preferenze del display lo sporcano, e al primo avvio KlipperScreen parte con i default — **risolto in G1-Configs (da unire)** |
 | [B29](#b29) | ~~Media~~ ✅ | G1-Configs | I link del menu Mainsail contengono l'IP: dopo un cambio di rete o senza rete (`127.0.0.1`) non funzionano — **risolto (da unire)** |
+| [B30](#b30) | Alta | G1-Printers | Il `moonraker.conf` di G1-Printers sostituisce quello dell'immagine al primo UPDATE G1: le correzioni del template si perdono — **in corso (cartelle da convertire una alla volta)** |
 
 ---
 
@@ -303,13 +304,13 @@ Segnalato dal campo: warning `[update_manager crowsnest]: Moonraker is not permi
 - Verifica: `: > ~/printer_data/moonraker.asvc && sudo systemctl restart moonraker` → file ripopolato, nessun warning in Mainsail.
 
 ### B26
-**Crowsnest: Moonraker si aspetta `master` (v4), il Recover rompe il servizio** — ✅ Risolto (2026-10-22), G1-Printers da allineare
+**Crowsnest: Moonraker si aspetta `master` (v4), il Recover rompe il servizio** — ✅ Risolto (2026-10-22), G1-Printers: vedi [B30](#b30)
 
 Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1): già al primo avvio Mainsail mostra `Repo not on official remote/branch, expected: origin/master, detected: origin/v5` e propone il Recover. Crowsnest tiene un branch per versione maggiore: `master` è la v4 (bash, ultimo tag v4.2.0), `v5` è la v5 (Python) ed è il default del repo. `53-crowsnest` clona il default, ma la sezione `[update_manager crowsnest]` di G1-Configs non aveva `primary_branch` e Moonraker assume `master` (`git_deploy.py`: `config.get("primary_branch", "master")`). Il Recover riclona `master`, mentre `crowsnest.service` lancia ancora `crowsnest-env/bin/python3 -m crowsnest` della v5: il servizio va in `failed`. Alla sezione mancavano anche `virtualenv`, `requirements` e `system_dependencies`, quindi un update dentro la v5 non avrebbe installato le nuove dipendenze Python.
 - Fix: `53-crowsnest` copia `~/crowsnest/resources/moonraker_update.txt` del branch clonato in `config/moonraker-crowsnest.conf` (`primary_branch` e virtualenv giusti per quella versione); `CROWSNEST_ADD_CROWSNEST_MOONRAKER=0`, perché la sezione scritta dall'installer veniva comunque sovrascritta da G1-Configs. Il template `Configs/moonraker.conf` di G1-Configs sostituisce la sezione con `[include moonraker-crowsnest.conf]`. Nessun branch è scritto nei repo Ginger: ogni immagine segue il default di crowsnest del giorno della build.
 - Il cambio di versione maggiore (es. v6) arriva solo con una nuova immagine: Moonraker non segnala che il default upstream è cambiato, e il passaggio richiede `make upgrade` di crowsnest (migrazione config, disinstallazione, reinstallazione), non un Recover.
 - Se `moonraker-crowsnest.conf` manca, Moonraker non parte (`No files matching include directive`).
-- Da fare: i `moonraker.conf` per matricola di G1-Printers hanno ancora la vecchia sezione; finché non usano l'`include`, UPDATE G1 riporta il problema.
+- G1-Printers: al primo UPDATE G1 il `moonraker.conf` della cartella della stampante sostituisce quello dell'immagine. Le cartelle passano al formato con l'`include` una alla volta, quando si rifà la SD di quella stampante: vedi [B30](#b30).
 - Verifica: `git -C ~/crowsnest branch --show-current` → `v5`; nessun avviso crowsnest in Mainsail; Recover su crowsnest → resta su `v5` e il servizio riparte (senza camera si ferma per [B24](#b24)).
 
 ### B27
@@ -337,3 +338,12 @@ Segnalato dal campo (G1-0038-25, G1OS 3.0.1). `mainsail_menu.py` di G1-Configs s
 - Fix in G1-Configs: se `/etc/nginx/sites-enabled/mainsail` contiene `location /g1/`, il menu usa link relativi all'host della pagina (`/g1/checkforupdate`, `/g1/update`); altrimenti tiene i link `http://<ip>:5000/…`. In questo modo un aggiornamento di G1-Configs non rompe il menu sulle G1 con immagini precedenti, che ricevono G1-Configs via Moonraker ma non la modifica a nginx. I redirect verso Mainsail usano l'host della richiesta, e `ProxyFix(x_prefix=1)` gestisce il prefisso `/g1` per il CSS e i link di `/docs`. La porta 5000 resta raggiungibile direttamente.
 - Rischio residuo: una reinstallazione di Mainsail da KIAUH riscrive il sito nginx e toglie `/g1/`; il menu torna allora ai link con l'IP.
 - Verifica: `grep -A1 "location /g1/" /etc/nginx/sites-enabled/mainsail`; in `.theme/navi.json` i link sono `/g1/…`; il menu funziona da un PC sia via IP sia via `g1os.local`, anche dopo un cambio di rete; `http://<host>/g1/init` si vede con il suo CSS; dopo UPDATE G1 si torna a Mainsail sullo stesso host.
+
+### B30
+**Il `moonraker.conf` di G1-Printers sostituisce quello dell'immagine** — Alta, in corso (2026-10-22)
+
+Segnalato dal campo (G1-0038-25, G1OS 3.0.1). Ogni cartella di G1-Printers (`G1-0038-25/`, …) contiene un `moonraker.conf`, e le 87 cartelle e `G1-TEMPLATE` avevano lo stesso file, più vecchio del template di G1-Configs (senza fix #16 di KlipperScreen, senza KAMP, crowsnest senza `primary_branch`). Dopo l'INIT `G1.Conf` non ha SHA salvati, quindi `checkforupdate_script.py` considera tutti i file della cartella da aggiornare, e il primo UPDATE G1 sostituisce il `moonraker.conf` dell'immagine. Le correzioni del template (es. [B26](#b26), [B29](#b29)) si perdono anche sulle immagini nuove. Anche il factory reset cancella il file, che torna con l'UPDATE G1 successivo.
+- Non si possono convertire tutte le cartelle insieme: ogni stampante scarica solo la propria cartella, ma su una stampante con un'immagine 3.0.1 o precedente l'`[include moonraker-crowsnest.conf]` del formato nuovo blocca Moonraker (`No files matching include directive`), recuperabile solo via SSH. Non si può nemmeno scrivere `primary_branch: v5`: le stampanti con immagini vecchie possono avere crowsnest v4 su `master`.
+- Fatto in G1-Printers (`b4b7c1a`): `G1-TEMPLATE/moonraker.conf` è il template di G1-Configs (formato nuovo), quindi le stampanti create da `addnewmachine.py` nascono nel formato nuovo e vanno flashate solo con immagini che contengono B26. `MOONRAKER.md` (linkato da `CLAUDE.md`) spiega i due formati, come riconoscere l'immagine di una stampante (`~/printer_data/config/moonraker-crowsnest.conf`), la procedura di reflash e come sbloccare una stampante che ha ricevuto il formato sbagliato.
+- Da fare: convertire ogni cartella al formato nuovo dopo il reflash della stampante (prima G1-0038-25). Elenco delle cartelle già convertite: `grep -l "include moonraker-crowsnest.conf" */moonraker.conf` in G1-Printers.
+- Verifica, dopo il reflash e la conversione: UPDATE G1 completato, Mainsail collegato, nessun avviso su crowsnest, sezioni KlipperScreen e KAMP presenti nel `moonraker.conf` della stampante.
