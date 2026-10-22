@@ -36,6 +36,7 @@ Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2
 | [B24](#b24) | Bassa | Crowsnest | `crowsnest.service` in `failed` sulle stampanti senza camera |
 | [B25](#b25) | ~~Media~~ ✅ | Moonraker | `moonraker.asvc` vuoto → «not permitted to restart service 'crowsnest'» — **risolto** |
 | [B26](#b26) | ~~Alta~~ ✅ | Crowsnest | Moonraker si aspetta crowsnest su `master` (v4): il Recover installa la v4 e il servizio non parte — **risolto (G1-Printers da allineare)** |
+| [B27](#b27) | ~~Alta~~ ✅ | G1-Configs | g1-flask gira come root e lascia `__pycache__` di root nel repo: il Recover di GingerConfigs si blocca a metà — **risolto in G1-Configs (da unire)** |
 
 ---
 
@@ -308,3 +309,10 @@ Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1): già al primo avvio Ma
 - Se `moonraker-crowsnest.conf` manca, Moonraker non parte (`No files matching include directive`).
 - Da fare: i `moonraker.conf` per matricola di G1-Printers hanno ancora la vecchia sezione; finché non usano l'`include`, UPDATE G1 riporta il problema.
 - Verifica: `git -C ~/crowsnest branch --show-current` → `v5`; nessun avviso crowsnest in Mainsail; Recover su crowsnest → resta su `v5` e il servizio riparte (senza camera si ferma per [B24](#b24)).
+
+### B27
+**g1-flask come root: il Recover di GingerConfigs si blocca su `__pycache__`** — ✅ Risolto in G1-Configs (2026-10-22, da unire)
+
+Segnalato dal campo (G1OS 3.0.1): `Error Recovering GingerConfigs: [Errno 13] Permission denied: '/home/pi/G1-Configs/Flask/scripts/__pycache__'`. `install.sh` di G1-Configs creava `g1-flask.service` con `User=root`, quindi Python scriveva `Flask/scripts/__pycache__` e `Flask/utils/__pycache__` di root accanto ai sorgenti. Un update normale (`git pull`) non le tocca, perché sono nel `.gitignore`. Il Recover invece cancella tutta `~/G1-Configs` come `pi`: si ferma su quelle cartelle e lascia il repo con file mancanti (`Repo validation check failed`), e ogni Recover successivo fallisce. Le cartelle nascono quando la macchina è accesa, non durante la build (in chroot g1-flask non parte).
+- Fix in G1-Configs: il servizio gira come `pi` con `SupplementaryGroups=moonraker-admin`, gruppo richiesto dalla regola polkit di Moonraker per `systemctl restart klipper` (UPDATE G1). `/etc/polkit-1/rules.d/g1-flask.rules` permette a `pi` solo `org.freedesktop.timedate1.set-timezone`, e `init_script.py` chiama `timedatectl` senza `sudo`, che su G1OS chiede la password (`98-remove-passwordless-sudo`).
+- Verifica: `systemctl show -p User g1-flask` → `pi`; `find ~/G1-Configs ~/printer_data -user root` vuoto; INIT con un fuso diverso → `timedatectl` aggiornato; UPDATE G1 riavvia Klipper; Recover di GingerConfigs completato.
