@@ -44,6 +44,7 @@ Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2
 | [B32](#b32) | ~~Bassa~~ ✅ | G1-Configs | «by Ginger Additive» compare due volte nel menu di Mainsail — **risolto** (verificato su G1-9999-25) |
 | [B33](#b33) | ~~Alta~~ ✅ | G1-Configs | UPDATE G1 scarica la versione vecchia di un file appena modificato in G1-Printers (cache di raw.githubusercontent.com) — **risolto** (verificato su G1-9999-25) |
 | [B34](#b34) | ~~Media~~ ✅ | G1-Configs | g1-flask non viene riavviato dopo un aggiornamento o un Recover di GingerConfigs: dopo il Recover la pagina INIT dà errore 500 — **risolto** (verificato su G1-9999-25) |
+| [B35](#b35) | ~~Bassa~~ ✅ | G1-Configs | Il database di Moonraker ripristinato da G1-Configs contiene versioni vecchie: dopo il flash Mainsail propone un downgrade e il menu mostra UPDATE G1 — **risolto** (verificato su G1-9999-25) |
 
 ---
 
@@ -381,3 +382,10 @@ Visto in collaudo sulla G1-9999-25: dopo un Recover di GingerConfigs `/g1/init` 
 - Fix in G1-Configs (`cbe016c`): `g1-flask.service` ha `Alias=GingerConfigs.service` (Moonraker riavvia via D-Bus `GingerConfigs.service`, che systemd risolve sull'alias), `install.sh` aggiunge `GingerConfigs` a `~/printer_data/moonraker.asvc` (già creato da `51-moonraker`, vedi [B25](#b25)) e usa `systemctl reenable` per creare l'alias, e il template ha `managed_services = klipper GingerConfigs`.
 - G1-Printers (`0be6db8`): `G1-TEMPLATE` e `G1-9999-25` hanno il nuovo `managed_services`; le altre cartelle restano come sono fino al reflash, come per [B30](#b30) (su un'immagine vecchia il nome `GingerConfigs` genera l'avviso e toglie anche il riavvio di klipper). `MOONRAKER.md` descrive la seconda differenza tra i formati.
 - Verifica: `systemctl cat GingerConfigs.service` mostra `g1-flask.service`; nessun avviso nell'Update Manager; dopo un Recover o un aggiornamento di GingerConfigs `systemctl show -p ActiveEnterTimestamp g1-flask` è cambiato e `http://<host>/g1/init` risponde.
+
+### B35
+**Cache dell'update manager nel database di Moonraker ripristinato** — ✅ Risolto in G1-Configs (2026-10-22, verificato su G1-9999-25)
+
+Visto in collaudo sulla G1-9999-25 con l'immagine nuova: subito dopo il flash Moonraker dava per mainsail la versione remota `v2.13.2`, più vecchia della `v2.19.0` installata. `install.sh` di G1-Configs ripristina `Database/moonraker-sql.db`, che contiene la cache dell'update manager della stampante da cui è stato esportato (anche Klippain-ShakeTune, non installato sulle G1). Moonraker aggiorna la cache solo nella finestra notturna (0-5) o con un refresh manuale; fino ad allora Mainsail propone un «aggiornamento» che è un downgrade, `checkforupdate_script.py` (che confronta `version != remote_version`) accende UPDATE G1 e UPDATE G1 manda alla pagina Machine.
+- Fix in G1-Configs (`6bb4b5e`): dopo il ripristino `install.sh` cancella dal db lo spazio dei nomi `update_manager`; all'avvio Moonraker ricava le versioni reali. Il fix vale anche se in futuro il db viene esportato di nuovo con la cache.
+- Verifica: dopo il primo avvio, senza refresh, l'Update Manager mostra versioni locali e remote uguali e nel menu c'è solo «by Ginger Additive» (dopo l'INIT compare UPDATE G1 per i file di G1-Printers, come previsto).
