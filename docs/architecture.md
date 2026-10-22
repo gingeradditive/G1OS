@@ -137,7 +137,8 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
 
 | Porta | Servizio |
 |---|---|
-| 80 | nginx → Mainsail statico; `/websocket`, `/printer`, `/api`, `/access`, `/machine`, `/server` → Moonraker |
+| 80 | nginx → Mainsail statico; `/websocket`, `/printer`, `/api`, `/access`, `/machine`, `/server` → Moonraker; `/g1/` → g1-flask |
+| 5000 | g1-flask (G1-Configs, diretto) |
 | 7125 | Moonraker (diretto) |
 | 8080-8083 | crowsnest (proxati su `/webcam/` … `/webcam4/`) |
 

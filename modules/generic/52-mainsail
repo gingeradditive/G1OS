@@ -38,6 +38,10 @@ cp /files/mainsail-nginx/upstreams.conf /etc/nginx/conf.d/upstreams.conf
 echo "Enable the site"
 ln -s /etc/nginx/sites-available/mainsail /etc/nginx/sites-enabled/
 
+# A syntax error would leave the printer without Mainsail: fail the build
+echo "Check the nginx configuration"
+nginx -t
+
 ########################################
 # Modify Logrotate for nginx           #
 ########################################
