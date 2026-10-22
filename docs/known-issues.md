@@ -37,6 +37,7 @@ Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2
 | [B25](#b25) | ~~Media~~ ✅ | Moonraker | `moonraker.asvc` vuoto → «not permitted to restart service 'crowsnest'» — **risolto** |
 | [B26](#b26) | ~~Alta~~ ✅ | Crowsnest | Moonraker si aspetta crowsnest su `master` (v4): il Recover installa la v4 e il servizio non parte — **risolto (G1-Printers da allineare)** |
 | [B27](#b27) | ~~Alta~~ ✅ | G1-Configs | g1-flask gira come root e lascia `__pycache__` di root nel repo: il Recover di GingerConfigs si blocca a metà — **risolto in G1-Configs (da unire)** |
+| [B28](#b28) | ~~Alta~~ ✅ | KlipperScreen | `KlipperScreen.conf` linkato al repo: le preferenze del display lo sporcano, e al primo avvio KlipperScreen parte con i default — **risolto in G1-Configs (da unire)** |
 
 ---
 
@@ -316,3 +317,13 @@ Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1): già al primo avvio Ma
 Segnalato dal campo (G1OS 3.0.1): `Error Recovering GingerConfigs: [Errno 13] Permission denied: '/home/pi/G1-Configs/Flask/scripts/__pycache__'`. `install.sh` di G1-Configs creava `g1-flask.service` con `User=root`, quindi Python scriveva `Flask/scripts/__pycache__` e `Flask/utils/__pycache__` di root accanto ai sorgenti. Un update normale (`git pull`) non le tocca, perché sono nel `.gitignore`. Il Recover invece cancella tutta `~/G1-Configs` come `pi`: si ferma su quelle cartelle e lascia il repo con file mancanti (`Repo validation check failed`), e ogni Recover successivo fallisce. Le cartelle nascono quando la macchina è accesa, non durante la build (in chroot g1-flask non parte).
 - Fix in G1-Configs: il servizio gira come `pi` con `SupplementaryGroups=moonraker-admin`, gruppo richiesto dalla regola polkit di Moonraker per `systemctl restart klipper` (UPDATE G1). `/etc/polkit-1/rules.d/g1-flask.rules` permette a `pi` solo `org.freedesktop.timedate1.set-timezone`, e `init_script.py` chiama `timedatectl` senza `sudo`, che su G1OS chiede la password (`98-remove-passwordless-sudo`).
 - Verifica: `systemctl show -p User g1-flask` → `pi`; `find ~/G1-Configs ~/printer_data -user root` vuoto; INIT con un fuso diverso → `timedatectl` aggiornato; UPDATE G1 riavvia Klipper; Recover di GingerConfigs completato.
+
+### B28
+**`KlipperScreen.conf` linkato al repo G1-Configs** — ✅ Risolto in G1-Configs (2026-10-22, da unire)
+
+Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1). `server.py` di g1-flask, a ogni avvio, sostituiva `printer_data/config/KlipperScreen.conf` con un link al file tracciato `G1-Configs/Configs/G1-Configs/KlipperScreen.conf`. Due effetti:
+- KlipperScreen salva le preferenze del display (sezione `#~#`) nel file che legge, quindi nel repo: G1-Configs risulta modificato e Mainsail propone il Recover (vedi [B27](#b27)). Le righe `#~# [graph …]` le scrive solo un tocco sui sensori del grafico (`toggle_visibility`).
+- Il link non era nell'immagine: `server.py` lo crea solo dopo aver trovato internet. Al primo avvio KlipperScreen non trova il file e carica `KlipperScreen/config/defaults.conf` (tema e menu standard), e legge la config solo all'avvio.
+- Fix in G1-Configs: `install.sh` crea durante la build un `KlipperScreen.conf` locale (di `pi`) che contiene solo `[include G1-Configs/KlipperScreen.conf]`, e `server.py` non ricrea più il link. Il blocco `#~#` del file tracciato è spostato in `[main]` (`print_sort_dir`, `move_speed_xy`, `move_speed_z`), perché in un file incluso sarebbe solo un commento. Verificato con il parser di klipperscreen4pellet: configurazione risultante identica a prima, e un salvataggio dal display scrive solo nel file locale.
+- Al primo salvataggio dal display, KlipperScreen scrive nel file locale anche tutte le opzioni di `[main]` modificabili da display (`theme`, `font_size`, `language`, …): da quel momento quelle opzioni non seguono più il repo su quella macchina. È il comportamento standard di KlipperScreen, uguale a prima.
+- Verifica: al primo avvio il display ha il tema Ginger; nel log di KlipperScreen `Config path location: /home/pi/printer_data/config/KlipperScreen.conf`; dopo aver nascosto un sensore nel grafico `git -C ~/G1-Configs status` resta pulito.
