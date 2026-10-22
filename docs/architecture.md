@@ -108,7 +108,8 @@ Note sull'ordinamento (`LC_ALL=C`): le maiuscole vengono prima delle minuscole, 
   G1-Configs/               # gingeradditive/G1-Configs (config stampante + app Flask, installer proprio)
   printer_data/
     config/                 # printer.cfg (da G1-Configs), moonraker.conf, mainsail.cfg→, timelapse.cfg→,
-                            # KAMP/→, KAMP_Settings.cfg, crowsnest.conf, splash.png (atteso)
+                            # KAMP/→, KAMP_Settings.cfg, crowsnest.conf, moonraker-crowsnest.conf,
+                            # splash.png (atteso)
     gcodes/media → /media   # chiavette USB (61-EnableUSB)
     logs/                   # klippy.log, moonraker.log, crowsnest.log, mainsail-*.log→/var/log/nginx
     comms/                  # klippy.sock, klippy.serial

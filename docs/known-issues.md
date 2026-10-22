@@ -35,6 +35,7 @@ Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2
 | [B23](#b23) | Bassa | Sistema | Fuso orario `Europe/London` di default |
 | [B24](#b24) | Bassa | Crowsnest | `crowsnest.service` in `failed` sulle stampanti senza camera |
 | [B25](#b25) | ~~Media~~ ✅ | Moonraker | `moonraker.asvc` vuoto → «not permitted to restart service 'crowsnest'» — **risolto** |
+| [B26](#b26) | ~~Alta~~ ✅ | Crowsnest | Moonraker si aspetta crowsnest su `master` (v4): il Recover installa la v4 e il servizio non parte — **risolto (G1-Printers da allineare)** |
 
 ---
 
@@ -297,3 +298,13 @@ G1OS non imposta il fuso orario: resta il default di Raspberry Pi OS (log un'ora
 Segnalato dal campo: warning `[update_manager crowsnest]: Moonraker is not permitted to restart service 'crowsnest'`; il workaround era cancellare `~/printer_data/moonraker.asvc` (vuoto) e riavviare. Moonraker scrive la lista di default solo se il file **non esiste**: un file vuoto resta vuoto per sempre. Nessun installer della build (Moonraker, crowsnest v5, sonar, KlipperScreen, G1-Configs) scrive il file; Moonraker lo crea al primo avvio con `write_text()` senza `fsync`, e uno spegnimento a interruttore subito dopo (ext4, allocazione ritardata) lascia un file da 0 byte. Causa probabile, non confermata.
 - Fix in `51-moonraker`: il file viene creato in build con `moonraker/assets/default_allowed_services` (contiene `crowsnest`, `KlipperScreen`, `sonar`, `moonraker-obico`), e un drop-in `moonraker.service.d/10-asvc.conf` lo cancella prima dell'avvio se è vuoto (Moonraker lo rigenera).
 - Verifica: `: > ~/printer_data/moonraker.asvc && sudo systemctl restart moonraker` → file ripopolato, nessun warning in Mainsail.
+
+### B26
+**Crowsnest: Moonraker si aspetta `master` (v4), il Recover rompe il servizio** — ✅ Risolto (2026-10-22), G1-Printers da allineare
+
+Segnalato dal campo (G1-0037-25, G1-0038-25, G1OS 3.0.1): già al primo avvio Mainsail mostra `Repo not on official remote/branch, expected: origin/master, detected: origin/v5` e propone il Recover. Crowsnest tiene un branch per versione maggiore: `master` è la v4 (bash, ultimo tag v4.2.0), `v5` è la v5 (Python) ed è il default del repo. `53-crowsnest` clona il default, ma la sezione `[update_manager crowsnest]` di G1-Configs non aveva `primary_branch` e Moonraker assume `master` (`git_deploy.py`: `config.get("primary_branch", "master")`). Il Recover riclona `master`, mentre `crowsnest.service` lancia ancora `crowsnest-env/bin/python3 -m crowsnest` della v5: il servizio va in `failed`. Alla sezione mancavano anche `virtualenv`, `requirements` e `system_dependencies`, quindi un update dentro la v5 non avrebbe installato le nuove dipendenze Python.
+- Fix: `53-crowsnest` copia `~/crowsnest/resources/moonraker_update.txt` del branch clonato in `config/moonraker-crowsnest.conf` (`primary_branch` e virtualenv giusti per quella versione); `CROWSNEST_ADD_CROWSNEST_MOONRAKER=0`, perché la sezione scritta dall'installer veniva comunque sovrascritta da G1-Configs. Il template `Configs/moonraker.conf` di G1-Configs sostituisce la sezione con `[include moonraker-crowsnest.conf]`. Nessun branch è scritto nei repo Ginger: ogni immagine segue il default di crowsnest del giorno della build.
+- Il cambio di versione maggiore (es. v6) arriva solo con una nuova immagine: Moonraker non segnala che il default upstream è cambiato, e il passaggio richiede `make upgrade` di crowsnest (migrazione config, disinstallazione, reinstallazione), non un Recover.
+- Se `moonraker-crowsnest.conf` manca, Moonraker non parte (`No files matching include directive`).
+- Da fare: i `moonraker.conf` per matricola di G1-Printers hanno ancora la vecchia sezione; finché non usano l'`include`, UPDATE G1 riporta il problema.
+- Verifica: `git -C ~/crowsnest branch --show-current` → `v5`; nessun avviso crowsnest in Mainsail; Recover su crowsnest → resta su `v5` e il servizio riparte (senza camera si ferma per [B24](#b24)).
