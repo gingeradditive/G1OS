@@ -2,6 +2,28 @@
 # Changelog
 All notable changes to G1OS will be documented in this file.
 
+## [3.0.2](https://github.com/gingeradditive/G1OS/releases/tag/3.0.2) - 2026-10-22
+### Bug Fixes and Improvements
+
+- **crowsnest**: Generate the Moonraker entry from the cloned branch
+- **nginx**: Proxy /g1/ to g1-flask for IP-free Mainsail menu links
+
+### Documentation
+
+- **known-issues**: Add B27, root-owned __pycache__ in G1-Configs
+- **known-issues**: Add B28, KlipperScreen.conf symlinked into the repo
+- **known-issues**: Add B30, G1-Printers moonraker.conf replaces the image one
+- **known-issues**: Add B31, process-wide socket timeout in g1-flask
+- **known-issues**: Fix B31 verification step
+- **known-issues**: Add B32-B34 from the G1-9999-25 bench test
+- **known-issues**: Add B35, stale update manager cache in the restored DB
+- **readme**: Describe the first setup of a G1
+- Update Raspberry Pi OS version from Bookworm to Trixie in documentation
+
+### Other
+
+- Bump version to v3.0.2
+
 ## [3.0.1](https://github.com/gingeradditive/G1OS/releases/tag/3.0.1) - 2026-10-06
 ### Bug Fixes and Improvements
 
