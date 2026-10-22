@@ -19,6 +19,9 @@ source /files/00-config
 
 REPO="https://github.com/mainsail-crew/crowsnest.git"
 DEPS=(git make)
+# Included by moonraker.conf (G1-Configs, G1-Printers): G1-Configs overwrites
+# moonraker.conf, so the update_manager entry lives in its own file
+MOONRAKER_CROWSNEST_CONF="/home/${BASE_USER}/printer_data/config/moonraker-crowsnest.conf"
 
 ########################################
 # Install System Packages              #
@@ -40,9 +43,19 @@ popd &> /dev/null || exit 1
 
 pushd "/home/${BASE_USER}/crowsnest" &> /dev/null || exit 1
 export CROWSNEST_UNATTENDED=1
-export CROWSNEST_ADD_CROWSNEST_MOONRAKER=1
+export CROWSNEST_ADD_CROWSNEST_MOONRAKER=0
 make install
 popd &> /dev/null || exit 1
+
+########################################
+# Moonraker update_manager entry       #
+########################################
+
+# Crowsnest keeps one branch per major version (master = v4, v5, ...) and its
+# moonraker_update.txt sets the matching primary_branch: copying it keeps
+# Moonraker on the branch that was cloned (repo default at build time)
+sudo -u "${BASE_USER}" cp "/home/${BASE_USER}/crowsnest/resources/moonraker_update.txt" \
+    "${MOONRAKER_CROWSNEST_CONF}"
 
 ########################################
 # Enable Service                       #
