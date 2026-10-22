@@ -40,6 +40,7 @@ Risultato di un'analisi statica del codice (2026-10-05, avviata sulla versione 2
 | [B28](#b28) | ~~Alta~~ ✅ | KlipperScreen | `KlipperScreen.conf` linkato al repo: le preferenze del display lo sporcano, e al primo avvio KlipperScreen parte con i default — **risolto in G1-Configs (da unire)** |
 | [B29](#b29) | ~~Media~~ ✅ | G1-Configs | I link del menu Mainsail contengono l'IP: dopo un cambio di rete o senza rete (`127.0.0.1`) non funzionano — **risolto (da unire)** |
 | [B30](#b30) | Alta | G1-Printers | Il `moonraker.conf` di G1-Printers sostituisce quello dell'immagine al primo UPDATE G1: le correzioni del template si perdono — **in corso (cartelle da convertire una alla volta)** |
+| [B31](#b31) | ~~Media~~ ✅ | G1-Configs | `socket.setdefaulttimeout(3)` in g1-flask: le chiamate a GitHub si interrompono dopo 3 s e il menu dice «tutto aggiornato» — **risolto in G1-Configs (da unire)** |
 
 ---
 
@@ -347,3 +348,10 @@ Segnalato dal campo (G1-0038-25, G1OS 3.0.1). Ogni cartella di G1-Printers (`G1-
 - Fatto in G1-Printers (`b4b7c1a`): `G1-TEMPLATE/moonraker.conf` è il template di G1-Configs (formato nuovo), quindi le stampanti create da `addnewmachine.py` nascono nel formato nuovo e vanno flashate solo con immagini che contengono B26. `MOONRAKER.md` (linkato da `CLAUDE.md`) spiega i due formati, come riconoscere l'immagine di una stampante (`~/printer_data/config/moonraker-crowsnest.conf`), la procedura di reflash e come sbloccare una stampante che ha ricevuto il formato sbagliato.
 - Da fare: convertire ogni cartella al formato nuovo dopo il reflash della stampante (prima G1-0038-25). Elenco delle cartelle già convertite: `grep -l "include moonraker-crowsnest.conf" */moonraker.conf` in G1-Printers.
 - Verifica, dopo il reflash e la conversione: UPDATE G1 completato, Mainsail collegato, nessun avviso su crowsnest, sezioni KlipperScreen e KAMP presenti nel `moonraker.conf` della stampante.
+
+### B31
+**Timeout di 3 secondi su tutte le connessioni di g1-flask** — ✅ Risolto in G1-Configs (2026-10-22, da unire)
+
+`is_internet_available()` in `Flask/server.py` chiamava `socket.setdefaulttimeout(3)` prima di avviare l'app, quindi ogni connessione del processo senza un timeout esplicito si interrompeva dopo 3 secondi, comprese le chiamate a GitHub di `checkforupdate_script.py` (elenco dei file della cartella, un commit per file) e `update_script.py` (download). Con GitHub lento la prima chiamata falliva, lo script restituiva `""` e il menu mostrava «tutto aggiornato» anche con aggiornamenti disponibili. Il socket del test non veniva chiuso.
+- Fix in G1-Configs: `socket.create_connection((host, port), timeout=timeout)` dentro un `with`, e `timeout=30` esplicito sulle tre chiamate a GitHub (senza il timeout globale sarebbero rimaste senza limite). Le chiamate a Moonraker su `localhost` avevano già `timeout=5`.
+- Verifica: `python3 -c "import socket; print(socket.getdefaulttimeout())"` non è applicabile al processo; sul dispositivo basta che `/checkforupdate` segnali gli aggiornamenti quando ci sono (es. dopo un commit nella cartella della stampante in G1-Printers).
