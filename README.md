@@ -32,6 +32,15 @@ G1OS comes with the following pre-installed and configured software:
 
 G1OS supports only the `pi` user. If you set a different username in Raspberry Pi Imager, the password, SSH keys and other settings you chose are applied to the `pi` user.
 
+## First setup of a G1
+
+Initialization links the printer to its serial number, and is done by Ginger Additive before shipping, not by the customer.
+
+1. Flash the SD card with G1OS and boot the printer, connected to the internet.
+2. Open `http://<printer-ip>:5000/init` (or `http://g1os.local:5000/init`). The page is not linked from the Mainsail menu on purpose: initializing with a wrong serial number downloads the configuration of another printer, including its thermistor calibration.
+3. Enter the serial number (e.g. `G1-0038-25`) and the timezone. If the printer is already initialized, the page shows a warning with the current serial.
+4. Back in Mainsail, open **UPDATE G1** from the menu: it downloads `printer.cfg`, `kamp.cfg` and `moonraker.conf` from the printer folder in [G1-Printers](https://github.com/gingeradditive/G1-Printers). Before reflashing a printer already in the field, read `MOONRAKER.md` there.
+
 ## FAQ
 
 **Q:** How do I report a bug?  
